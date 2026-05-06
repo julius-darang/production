@@ -1,19 +1,23 @@
-# Content Generation Ecosystem — v5.0
+# Content Generation Ecosystem — v5.1
 > Multi-Platform Content Processor · 4 Stages · 2 Active Formats · 1 Source of Truth
 
 ---
 
-## What Changed from v4.0
+## What Changed from v5.0
 
 | Change | Rationale |
 |---|---|
-| Stage 0 PP restructured for volume → part → slides hierarchy | Supports series-length courses, not just flat 5-part courses |
-| PP input simplified to 5 fields | Removed POSITIONING_ANGLE and ROUGH_IDEAS — both belong in the human's head, not the prompt |
-| PP output now emits a Handoff Block | Eliminates manual copy-paste between stages; copy one block, paste once |
-| P0 input updated to consume Handoff Block directly | No retyping of audience, series name, or volume context |
-| Short-form path clarified for volume-aware use | A short-form part still knows which volume it belongs to |
-| Revision Loop expanded with volume-level entries | Covers new failure modes introduced by multi-volume structure |
-| What did not change | The Golden Rule, Cross-Format Consistency Gate, and format prompts PA/PB/PE |
+| PP output: slide breakdown removed | Slides belong in Stage 1, not the course plan. PP is a map, not a spec. |
+| PP output: Flow Rationale → one sentence | One sentence is enough to justify volume order. Prose rationale added no review value. |
+| PP output: Review Notes → flags-only bullets | Prose review notes slowed review. Bullet flags are faster to scan and act on. |
+| PP Handoff Block now carries full course structure | P0 needs to know what volume it is in and what other parts exist. The Handoff Block is the only bridge between PP and P0. |
+| P0 input: SLIDES_FROM_OUTLINE removed | PP no longer outputs slides. P0 now plans slides itself in Section 0 before drafting. |
+| P0 input: VOLUME_PARTS field added | P0 consumes the current volume's part list so the LLM knows the full scope of the volume it is writing in. |
+| P0 prompt: Volume Context rule block added | Prevents P0 from repeating earlier parts or pre-teaching later ones. |
+| P0 prompt: Section 0 (Planned Slides) added | Slides are planned inside P0 before the breakdown begins — same output quality, correct stage placement. |
+
+### What did not change
+The Golden Rule, Cross-Format Consistency Gate, PP Input (5 fields), and format prompts PA / PB / PE are unchanged.
 
 ---
 
@@ -131,22 +135,17 @@ ONE-LINER:  [What this volume covers — one sentence]
   PART [N.N]: [Title — outcome-framed, not topic-labelled]
   ONE-LINER:  [What this part teaches — one sentence]
 
-    SLIDES:
-    - [Slide title]: [One sentence — what this slide establishes]
-    - ...
-
   Repeat for all parts in this volume.
 
 Repeat for all volumes.
 
-### FLOW RATIONALE
-2–3 sentences on why the volumes are ordered this way. What must the
-learner understand from Volume 1 before Volume 2 makes sense? What does
-the final volume resolve or complete?
+### FLOW NOTE
+[One sentence only — why the volumes are ordered this way.]
 
-### REVIEW NOTES
-Flag: volumes merged, topics cut, assumptions made about audience or
-positioning that the human should confirm before proceeding.
+### REVIEW FLAGS
+[Bullet list only. Flag: volumes merged, topics cut, assumptions made
+ about audience or positioning that the human should confirm.
+ No prose — flags only. Omit this section entirely if nothing to flag.]
 
 ---
 
@@ -160,24 +159,36 @@ CORE_PROBLEM:      [From Audience Profile → PROBLEM]
 TONE:              [Your suggested default tone for this series — one phrase,
                    e.g. "direct, practical, zero fluff"]
 
+COURSE_STRUCTURE:
+  VOLUME 1: [Title]
+    PART 1.1: [Title] — [one-liner]
+    PART 1.2: [Title] — [one-liner]
+    ...
+  VOLUME 2: [Title]
+    PART 2.1: [Title] — [one-liner]
+    ...
+  [All volumes and parts listed here]
+
 ## RULES
 - Volumes: 2–5. Hard limit.
 - Parts per volume: 3–8.
-- Slides per part: 6–10.
-- All titles must be outcome-framed.
+- No slide breakdown in PP output — slides are planned in Stage 1.
+- All part titles must be outcome-framed.
   BAD:  "Introduction to Prompts"
   GOOD: "Why Your Prompts Keep Failing"
-- Slide entries: title + one sentence only. No sub-bullets.
-- If optional fields were blank, make a suggestion and flag it in
-  Review Notes so the human can confirm or override.
+- Flow Note: exactly one sentence.
+- Review Flags: bullet points only, no prose. Omit if nothing to flag.
+- If optional fields were blank, make a suggestion and include it as a
+  Review Flag so the human can confirm or override.
 - Stop at the plan. Do not produce Master Drafts or any content.
 
 ## SELF-CHECK (append verbatim)
-□ 2–5 volumes, each with 3–8 parts, each with 6–10 slides
-□ All titles are outcome-framed
-□ Slide entries are title + one sentence only
-□ Flow Rationale explains volume order
-□ Handoff Block present and complete
+□ 2–5 volumes, each with 3–8 parts
+□ All part titles are outcome-framed
+□ No slide breakdown present
+□ Flow Note is exactly one sentence
+□ Review Flags are bullets only (or section omitted)
+□ Handoff Block present with full COURSE_STRUCTURE
 □ No content produced — plan only
 ```
 
@@ -188,8 +199,9 @@ TONE:              [Your suggested default tone for this series — one phrase,
 **One prompt per part. Do not run PA, PB, or PE without a completed,
 reviewed Master Draft.**
 
-The P0 input now has two sections: the Handoff Block (copied once from PP,
-unchanged for every part in the series) and the Per-Part Fields (filled fresh
+The P0 input has two sections: the Handoff Block (copied once from PP,
+unchanged for every part in the series, except VOLUME_PARTS which is
+updated when moving to a new volume) and the Per-Part Fields (filled fresh
 for each part).
 
 ---
@@ -199,7 +211,9 @@ for each part).
 ```
 ## MASTER DRAFT INPUT
 
-# ── HANDOFF BLOCK — copy from PP output, do not rewrite ──────────────
+# ── HANDOFF BLOCK — copy from PP output ──────────────────────────────
+# VOLUME_PARTS: replace with the current volume's part list when you
+# move to a new volume. Everything else stays unchanged for the full series.
 
 SERIES_TITLE:      {{ From PP Handoff Block }}
 TARGET_AUDIENCE:   {{ From PP Handoff Block }}
@@ -208,15 +222,19 @@ CORE_PROBLEM:      {{ From PP Handoff Block }}
 TONE:              {{ From PP Handoff Block — override here if this part
                       needs a different register }}
 
+VOLUME_PARTS:
+  {{ Paste the part list for the CURRENT volume only, from COURSE_STRUCTURE }}
+  {{ e.g.                                                                    }}
+  {{   PART 2.1: [Title] — [one-liner]                                       }}
+  {{   PART 2.2: [Title] — [one-liner]                                       }}
+  {{   PART 2.3: [Title] — [one-liner]                                       }}
+
 # ── PER-PART FIELDS — fill for this part ──────────────────────────────
 
 VOLUME_NUMBER:  {{ e.g. "Volume 2" }}
 VOLUME_TITLE:   {{ Volume title from planner }}
 PART_NUMBER:    {{ e.g. "Part 2.3" }}
 PART_TITLE:     {{ Part title from planner }}
-
-SLIDES_FROM_OUTLINE:
-  {{ Slide titles and one-liners for this part, copied from PP output }}
 
 PRIMARY_TAKEAWAY:
   {{ The single most important thing the learner walks away knowing }}
@@ -248,7 +266,27 @@ Maintain TONE exactly throughout — no academic drift.
 ## INPUT
 {{ PASTE COMPLETED MASTER DRAFT INPUT }}
 
+## VOLUME CONTEXT
+Before writing, orient yourself within the volume:
+- VOLUME_PARTS lists every part in this volume in sequence.
+- PART_NUMBER tells you which part you are writing right now.
+- Do not cover ground belonging to other parts listed in VOLUME_PARTS.
+- You may briefly reference an earlier part as established knowledge,
+  but do not summarise it.
+- Do not reveal or pre-teach content from parts that come after this one.
+
+## SLIDE PLANNING
+Before writing the breakdown, generate 6–10 slide titles for this part.
+Base them on PART_TITLE and PRIMARY_TAKEAWAY.
+Each slide title must be outcome-framed (not topic-labelled).
+Output these as Section 0 before any other section.
+
 ## OUTPUT FORMAT
+
+### 0. PLANNED SLIDES
+  - [Slide title]: [One sentence — what this slide establishes]
+  - ...
+  [6–10 entries. These become the SLIDES_FROM_OUTLINE for Section 3.]
 
 ### 1. CORE CONCEPT (2–3 sentences)
 The central idea of this part, stated plainly.
@@ -259,7 +297,7 @@ Write it as if explaining to a smart 16-year-old.
 The stakes. What stays broken if the audience never learns this.
 
 ### 3. SLIDE-BY-SLIDE BREAKDOWN
-For each item in SLIDES_FROM_OUTLINE:
+For each slide in Section 0:
 
   SLIDE TITLE:
   MAIN POINT:        [1 sentence — the single idea this slide teaches]
@@ -291,13 +329,16 @@ Must feel earned, not bolted on.
 - If EXAMPLES_OR_ANALOGIES were provided, use them. Do not replace them.
 - Every section must be present. Do not skip or merge.
 - THINGS_TO_AVOID words must not appear anywhere in the draft.
+- Use VOLUME_PARTS for orientation only — do not summarise other parts.
 
 ## SELF-CHECK (append verbatim)
+□ Section 0 present with 6–10 outcome-framed slide titles
 □ All 7 sections present and non-empty
 □ Core Concept ≤ 3 sentences
 □ Exactly 5 entries in Insight Block
 □ Anchor Analogy is named and labelled
 □ Worked Example requires no knowledge beyond ASSUMED_KNOWLEDGE
+□ No content repeated from or pre-taught from other VOLUME_PARTS entries
 □ Tone matches input — zero academic drift
 □ THINGS_TO_AVOID words do not appear
 ```
@@ -657,10 +698,13 @@ to the Course Planner before the next course iteration.]
 | DOCX structure is off | Re-run PA with a correction block: "REMINDER: [violated rule]. Fix this section: [paste bad output]." |
 | MARP bullets too long | Append to PB: "REMINDER: max 12 words per bullet. Rewrite all bullets exceeding this limit." |
 | Inconsistency across DOCX and slides | Lock P0 first. Inconsistency almost always means P0 was not finalised before format runs began. |
-| Volume scope is too broad | Edit the PP output directly before running any P0. Split into two volumes and flag in Review Notes. |
+| Volume scope is too broad | Edit the PP output directly before running any P0. Split into two volumes and flag in Review Flags. |
 | Part count per volume is too high | Merge two parts or move one to the next volume. Edit PP — never patch in P0. |
 | Planner suggested wrong parts | Edit the PP output before running any Master Draft. Never patch downstream. |
 | PE surfaces a better positioning angle | Note it in the Positioning Flag. Bring it back to PP for the next course — do not patch the current course mid-run. |
+| P0 repeated content from another part in the volume | Check VOLUME_PARTS is correct and PART_NUMBER is accurate. Re-run P0 with a correction block if needed. |
+| P0 pre-taught a later part's content | Append to P0: "REMINDER: do not reveal content from parts after [PART_NUMBER]. Rewrite [section] without it." |
+| Planned Slides in Section 0 are off-target | Revise PRIMARY_TAKEAWAY or PART_TITLE — the slide plan derives from these. Fix upstream, not in the breakdown. |
 
 > **Golden Rule:** Fix problems upstream, not downstream. If both formats share
 > the same issue, the fix belongs in the Master Draft — not in PA and PB
@@ -681,6 +725,6 @@ If any of these diverge, return to the Master Draft before publishing.
 
 ---
 
-*Content Generation Ecosystem · v5.0 · Updated May 2026*
+*Content Generation Ecosystem · v5.1 · Updated May 2026*
 *Active formats: DOCX Handout (PA) · MARP Slides (PB) · Title Pack (PE)*
 *HTML Tutorial and Carousel prompts deferred — restore in v6.0 when ready*

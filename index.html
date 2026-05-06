@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Content Ecosystem — v4.0</title>
+<title>Content Ecosystem — v5.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -175,6 +175,28 @@
     margin-bottom: 12px;
   }
 
+  /* ── HANDOFF CALLOUT ── */
+  .handoff-callout {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--blue);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    font-size: 12px;
+    color: var(--text-2);
+    font-family: var(--mono);
+  }
+  .handoff-callout strong {
+    color: var(--blue);
+    font-weight: 500;
+    display: block;
+    margin-bottom: 2px;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
   /* ── PAGE HEADER ── */
   .page-header { margin-bottom: 24px; }
   .page-header h1 {
@@ -212,6 +234,12 @@
   .field label .optional {
     font-weight: 400;
     color: var(--text-3);
+    margin-left: 4px;
+    font-size: 11px;
+  }
+  .field label .from-handoff {
+    font-weight: 400;
+    color: var(--blue);
     margin-left: 4px;
     font-size: 11px;
   }
@@ -276,7 +304,6 @@
     max-height: 520px;
     overflow-y: auto;
   }
-  .prompt-highlight { color: var(--blue); font-weight: 500; }
 
   /* ── BUTTONS ── */
   .btn {
@@ -413,9 +440,6 @@
   .format-card-name { font-size: 13px; font-weight: 500; }
   .format-card-desc { font-size: 12px; color: var(--text-2); margin-top: 2px; }
 
-  /* ── SECTIONS WITHIN PROMPT ── */
-  .prompt-section { margin-bottom: 10px; }
-
   /* ── GRID ROW ── */
   .row { display: flex; gap: 12px; }
   .row .field { flex: 1; }
@@ -435,12 +459,25 @@
     background: var(--green);
   }
 
+  /* ── SECTION DIVIDER ── */
+  .section-divider {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--text-3);
+    text-transform: uppercase;
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+    margin: 4px 0 14px;
+  }
+
   @media (max-width: 700px) {
     .app { grid-template-columns: 1fr; grid-template-rows: 52px auto 1fr; }
     .sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
     .main { padding: 16px; }
     .flow-grid { grid-template-columns: 1fr 1fr; }
     .format-grid { grid-template-columns: 1fr; }
+    .row { flex-direction: column; }
   }
 </style>
 </head>
@@ -455,7 +492,7 @@
     <span class="topbar-title">Content Generation Ecosystem</span>
     <div class="topbar-actions">
       <span class="save-notice"><span class="save-dot"></span> auto-saved</span>
-      <span class="topbar-badge">v4.0</span>
+      <span class="topbar-badge">v5.0</span>
       <button class="btn btn-ghost btn-sm" onclick="clearAll()">Clear all</button>
     </div>
   </header>
@@ -512,7 +549,7 @@
       </div>
 
       <div class="alert alert-blue">
-        Fill in your <strong>topic</strong> and fields in Stage 0, then work stage by stage. Each stage pre-fills data from the previous one — you only input each idea once.
+        Fill in your <strong>topic</strong> in Stage 0. The PP output now includes a <strong>Handoff Block</strong> — copy it once into Stage 1 and it pre-fills every series-level field for every part you write.
       </div>
 
       <div class="card">
@@ -520,7 +557,7 @@
         <div class="field">
           <label>Course topic or working title</label>
           <input type="text" id="global-topic" placeholder="e.g. Prompt Engineering 101" oninput="saveField('global-topic')">
-          <div class="hint">This fills into every stage automatically.</div>
+          <div class="hint">This fills into Stage 0 automatically.</div>
         </div>
         <div class="field">
           <label>Target audience <span class="optional">optional</span></label>
@@ -537,13 +574,13 @@
           <div class="flow-card" onclick="nav('pp')" id="flow-pp">
             <div class="flow-card-stage">Stage 0</div>
             <div class="flow-card-title">Course Planner</div>
-            <div class="flow-card-desc">Scope the course. 3–5 parts. Run once.</div>
+            <div class="flow-card-desc">Scope volumes + parts + slides. Run once. Emits Handoff Block.</div>
             <div class="flow-card-status" id="fstatus-pp">— not started</div>
           </div>
           <div class="flow-card" onclick="nav('p0')" id="flow-p0">
             <div class="flow-card-stage">Stage 1</div>
             <div class="flow-card-title">Master Draft</div>
-            <div class="flow-card-desc">Single source of truth per part.</div>
+            <div class="flow-card-desc">Single source of truth per part. Paste Handoff Block once.</div>
             <div class="flow-card-status" id="fstatus-p0">— not started</div>
           </div>
           <div class="flow-card" onclick="nav('pa')" id="flow-pa">
@@ -584,11 +621,11 @@
       <div class="page-header">
         <div class="stage-badge">Stage 0</div>
         <h1>Course Planner (PP)</h1>
-        <p>Run once per course. Review and edit the output before proceeding to Stage 1.</p>
+        <p>Run once per course. The output includes a Handoff Block — copy it directly into Stage 1.</p>
       </div>
 
       <div class="alert alert-amber">
-        <strong>Golden Rule:</strong> Review and edit the PP output before running any Master Draft. The planner decides structure once — honour it downstream.
+        <strong>Golden Rule:</strong> Review and edit the PP output before running any Master Draft. The Handoff Block at the end of the output carries every downstream assumption — confirm it before copying.
       </div>
 
       <div class="card">
@@ -601,32 +638,23 @@
           <label>Target outcome</label>
           <textarea id="pp-outcome" placeholder="What should someone be able to DO after completing this course?&#10;e.g. Write prompts that consistently produce usable AI outputs" oninput="saveField('pp-outcome')"></textarea>
         </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">Optional Fields</div>
         <div class="field">
-          <label>Rough ideas <span class="optional">optional</span></label>
-          <textarea id="pp-ideas" placeholder="Dump any subtopics, angles, or ideas you already have. Leave blank if starting cold." oninput="saveField('pp-ideas')"></textarea>
-        </div>
-        <div class="row">
-          <div class="field">
-            <label>Target audience <span class="optional">optional</span></label>
-            <input type="text" id="pp-audience" placeholder="Who is this for?" oninput="saveField('pp-audience')">
-          </div>
-          <div class="field">
-            <label>Assumed knowledge <span class="optional">optional</span></label>
-            <input type="text" id="pp-knowledge" placeholder="What do they already know?" oninput="saveField('pp-knowledge')">
-          </div>
+          <label>Target audience <span class="optional">optional — planner will suggest if blank</span></label>
+          <input type="text" id="pp-audience" placeholder="Who is this for?" oninput="saveField('pp-audience')">
         </div>
         <div class="field">
-          <label>Positioning angle <span class="optional">optional</span></label>
-          <input type="text" id="pp-angle" placeholder="e.g. practical-only, zero theory" oninput="saveField('pp-angle')">
+          <label>Assumed knowledge <span class="optional">optional — planner will suggest if blank</span></label>
+          <input type="text" id="pp-knowledge" placeholder="What do they already know?" oninput="saveField('pp-knowledge')">
         </div>
         <div class="field">
           <label>Things to avoid <span class="optional">optional</span></label>
           <input type="text" id="pp-avoid" placeholder="e.g. no academic language, avoid jargon-heavy framing" oninput="saveField('pp-avoid')">
         </div>
+      </div>
+
+      <div class="handoff-callout">
+        <strong>↓ Handoff Block</strong>
+        The PP prompt tells the model to emit a labelled Handoff Block at the end of its output. Copy that block — not the full output — into Stage 1. You only do this once per series.
       </div>
 
       <div class="prompt-block">
@@ -647,50 +675,69 @@
       <div class="page-header">
         <div class="stage-badge">Stage 1</div>
         <h1>Master Draft (P0)</h1>
-        <p>The single source of truth. Do not run format prompts without a completed, reviewed Master Draft.</p>
+        <p>The single source of truth per part. Do not run format prompts without a completed, reviewed Master Draft.</p>
       </div>
 
       <div class="alert alert-blue">
-        Fields marked <strong>↑ from PP</strong> auto-fill from Stage 0. Confirm they're correct before adding per-part fields.
+        Fields marked <strong>↑ Handoff Block</strong> come from the PP output. Paste the Handoff Block into these fields once — they stay the same for every part in the series. Only the Per-Part fields change each time.
       </div>
 
       <div class="card">
-        <div class="card-title">From Course Planner</div>
+        <div class="card-title">Handoff Block — from Course Planner</div>
         <div class="field">
-          <label>Course series <span class="optional">↑ from PP</span></label>
-          <input type="text" id="p0-course" placeholder="Course title from planner" oninput="saveField('p0-course')">
+          <label>Series title <span class="from-handoff">↑ Handoff Block</span></label>
+          <input type="text" id="p0-course" placeholder="Course series title from planner" oninput="saveField('p0-course')">
         </div>
         <div class="row">
           <div class="field">
-            <label>Target audience <span class="optional">↑ from PP</span></label>
+            <label>Target audience <span class="from-handoff">↑ Handoff Block</span></label>
             <input type="text" id="p0-audience" placeholder="Audience from planner" oninput="saveField('p0-audience')">
           </div>
           <div class="field">
-            <label>Assumed knowledge <span class="optional">↑ from PP</span></label>
+            <label>Assumed knowledge <span class="from-handoff">↑ Handoff Block</span></label>
             <input type="text" id="p0-knowledge" placeholder="Assumed knowledge from planner" oninput="saveField('p0-knowledge')">
           </div>
+        </div>
+        <div class="field">
+          <label>Core problem <span class="from-handoff">↑ Handoff Block</span></label>
+          <textarea id="p0-coreproblem" placeholder="The frustration this course solves — stated from the audience's point of view" style="min-height:60px;" oninput="saveField('p0-coreproblem')"></textarea>
+        </div>
+        <div class="field">
+          <label>Series tone <span class="from-handoff">↑ Handoff Block</span></label>
+          <input type="text" id="p0-tone-default" placeholder="e.g. direct, practical, zero fluff" oninput="saveField('p0-tone-default')">
+          <div class="hint">Default tone for all parts. Override below only if this part needs a different register.</div>
         </div>
       </div>
 
       <div class="card">
-        <div class="card-title">Per-Part Fields</div>
+        <div class="card-title">Per-Part Fields — fill fresh for each part</div>
+        <div class="row">
+          <div class="field">
+            <label>Volume number</label>
+            <input type="text" id="p0-volnum" placeholder="e.g. Volume 2" oninput="saveField('p0-volnum')">
+          </div>
+          <div class="field">
+            <label>Volume title</label>
+            <input type="text" id="p0-voltitle" placeholder="e.g. Core Techniques" oninput="saveField('p0-voltitle')">
+          </div>
+        </div>
         <div class="row">
           <div class="field">
             <label>Part number</label>
-            <input type="text" id="p0-partnum" placeholder="e.g. Part 2" oninput="saveField('p0-partnum')">
+            <input type="text" id="p0-partnum" placeholder="e.g. Part 2.3" oninput="saveField('p0-partnum')">
           </div>
           <div class="field">
             <label>Part title</label>
-            <input type="text" id="p0-parttitle" placeholder="e.g. The Four-Part Prompt Formula" oninput="saveField('p0-parttitle')">
+            <input type="text" id="p0-parttitle" placeholder="e.g. Chain-of-Thought Prompting" oninput="saveField('p0-parttitle')">
           </div>
         </div>
         <div class="field">
-          <label>Tone</label>
-          <input type="text" id="p0-tone" placeholder="e.g. direct, practical, zero fluff — sharp senior explaining to a junior" oninput="saveField('p0-tone')">
+          <label>Tone override <span class="optional">optional — leave blank to use series tone</span></label>
+          <input type="text" id="p0-tone-override" placeholder="Only fill if this part needs a different register" oninput="saveField('p0-tone-override')">
         </div>
         <div class="field">
-          <label>Key slides from outline</label>
-          <textarea id="p0-slides" placeholder="Bullet points or slide titles for this part" oninput="saveField('p0-slides')"></textarea>
+          <label>Slides from outline</label>
+          <textarea id="p0-slides" placeholder="Slide titles and one-liners for this part, copied from PP output" oninput="saveField('p0-slides')"></textarea>
         </div>
         <div class="field">
           <label>Primary takeaway</label>
@@ -705,8 +752,8 @@
           <textarea id="p0-examples" placeholder="Any examples you already have — leave blank otherwise" oninput="saveField('p0-examples')"></textarea>
         </div>
         <div class="field">
-          <label>Things to avoid <span class="optional">optional</span></label>
-          <input type="text" id="p0-avoid" placeholder="Words, tones, or framings to exclude for this part" oninput="saveField('p0-avoid')">
+          <label>Things to avoid <span class="optional">optional — additional exclusions for this part</span></label>
+          <input type="text" id="p0-avoid" placeholder="Beyond the series defaults" oninput="saveField('p0-avoid')">
         </div>
       </div>
 
@@ -816,18 +863,18 @@
       <div class="page-header">
         <div class="stage-badge">Format — PE</div>
         <h1>Title &amp; Description Pack</h1>
-        <p>Always run this last. For short-form path, run directly from PP output — no P0 required.</p>
+        <p>Always run this last. For short-form path, paste the PP Handoff Block directly — no P0 required.</p>
       </div>
 
       <div class="alert alert-green">
-        <strong>Short-form path:</strong> For standalone explainers or Substack essays that don't need slides or handouts — paste PP output directly here. Skip P0, PA, PB.
+        <strong>Short-form path:</strong> For standalone explainers or Substack essays that don't need slides or handouts — paste the PP Handoff Block directly here. Skip P0, PA, PB.
       </div>
 
       <div class="card">
         <div class="card-title">PE Input</div>
         <div class="field">
-          <label>Master Draft or PP output</label>
-          <textarea id="pe-draft" placeholder="Paste your completed Master Draft, or PP output if using short-form path..." style="min-height:120px;" oninput="saveField('pe-draft')"></textarea>
+          <label>Master Draft or PP Handoff Block</label>
+          <textarea id="pe-draft" placeholder="Paste your completed Master Draft, or the PP Handoff Block if using short-form path..." style="min-height:120px;" oninput="saveField('pe-draft')"></textarea>
         </div>
       </div>
 
@@ -861,7 +908,7 @@
           </thead>
           <tbody>
             <tr style="border-bottom:1px solid var(--border);">
-              <td style="padding:10px 12px;">Full teaching unit — course handout + video</td>
+              <td style="padding:10px 12px;">Full teaching unit — handout + slides</td>
               <td style="padding:10px 12px; color:var(--green); font-family:var(--mono); font-size:12px;">P0 → PA · PB · PE</td>
               <td style="padding:10px 12px; color:var(--text-3); font-family:var(--mono); font-size:12px;">—</td>
             </tr>
@@ -889,7 +936,8 @@
         </table>
       </div>
       <div class="alert alert-blue">
-        <strong>Always run PE</strong> regardless of path. Consistent naming across channels protects discoverability.
+        <strong>Always run PE</strong> regardless of path. Consistent naming across channels protects discoverability.<br><br>
+        <strong>Short-form path:</strong> Paste the PP Handoff Block directly into PE — the tone, audience, and series context are all in there.
       </div>
     </div>
 
@@ -900,7 +948,7 @@
         <p>Fix problems upstream, not downstream.</p>
       </div>
       <div class="alert alert-amber">
-        <strong>Golden Rule:</strong> If both formats share the same issue, the fix belongs in the Master Draft — not in PA and PB separately.
+        <strong>Golden Rule:</strong> If both formats share the same issue, the fix belongs in the Master Draft — not in PA and PB separately. If multiple parts share the same issue, the fix belongs in the PP output — not in individual P0 runs.
       </div>
       <div class="card">
         <table style="width:100%; border-collapse:collapse; font-size:13px;">
@@ -917,7 +965,11 @@
             </tr>
             <tr style="border-bottom:1px solid var(--border);">
               <td style="padding:10px 12px;">Wrong tone</td>
-              <td style="padding:10px 12px; color:var(--text-2);">Add 2–3 phrasing examples to the P0 TONE field: "Write like this: [example]. Not like this: [bad example]."</td>
+              <td style="padding:10px 12px; color:var(--text-2);">Add 2–3 phrasing examples to the P0 tone field: "Write like this: [example]. Not like this: [bad example]."</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:10px 12px;">Tone is right for some parts but not others</td>
+              <td style="padding:10px 12px; color:var(--text-2);">Use the Tone Override field in Stage 1 Per-Part Fields. The Handoff Block default still applies to all other parts.</td>
             </tr>
             <tr style="border-bottom:1px solid var(--border);">
               <td style="padding:10px 12px;">DOCX structure is off</td>
@@ -932,8 +984,16 @@
               <td style="padding:10px 12px; color:var(--text-2);">Lock P0 first. Inconsistency almost always means P0 was not finalised before format runs began.</td>
             </tr>
             <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:10px 12px;">Volume scope is too broad</td>
+              <td style="padding:10px 12px; color:var(--text-2);">Edit the PP output directly — split into two volumes. Never patch in P0.</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:10px 12px;">Part count per volume is too high</td>
+              <td style="padding:10px 12px; color:var(--text-2);">Merge two parts or move one to the next volume in the PP output. Never patch downstream.</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
               <td style="padding:10px 12px;">Planner suggested wrong parts</td>
-              <td style="padding:10px 12px; color:var(--text-2);">Edit the PP output directly before running any Master Draft. Never patch downstream.</td>
+              <td style="padding:10px 12px; color:var(--text-2);">Edit the PP output before running any Master Draft. Never patch downstream.</td>
             </tr>
             <tr>
               <td style="padding:10px 12px;">PE surfaces a better positioning angle</td>
@@ -951,8 +1011,9 @@
 // ── STATE ──────────────────────────────────────────────────────────────
 const FIELDS = [
   'global-topic','global-audience',
-  'pp-topic','pp-outcome','pp-ideas','pp-audience','pp-knowledge','pp-angle','pp-avoid',
-  'p0-course','p0-audience','p0-knowledge','p0-partnum','p0-parttitle','p0-tone',
+  'pp-topic','pp-outcome','pp-audience','pp-knowledge','pp-avoid',
+  'p0-course','p0-audience','p0-knowledge','p0-coreproblem','p0-tone-default',
+  'p0-volnum','p0-voltitle','p0-partnum','p0-parttitle','p0-tone-override',
   'p0-slides','p0-takeaway','p0-cta','p0-examples','p0-avoid',
   'pa-draft','pa-pagesize','pa-color',
   'pb-draft','pb-theme','pb-ratio',
@@ -983,13 +1044,12 @@ function loadAll() {
 }
 
 function syncRelated(id) {
-  // Auto-populate p0 fields from pp
   const map = {
-    'pp-topic': 'p0-course',
-    'pp-audience': 'p0-audience',
+    'global-topic':    'pp-topic',
     'global-audience': 'pp-audience',
-    'global-topic': 'pp-topic',
-    'pp-knowledge': 'p0-knowledge',
+    'pp-topic':        'p0-course',
+    'pp-audience':     'p0-audience',
+    'pp-knowledge':    'p0-knowledge',
   };
   if (map[id]) {
     const src = document.getElementById(id);
@@ -997,9 +1057,9 @@ function syncRelated(id) {
     if (src && dst && dst.value === '') {
       dst.value = src.value;
       localStorage.setItem('cge_' + map[id], dst.value);
+      renderAllPrompts();
     }
   }
-  // Also sync p0 draft to pa/pb
   updateFlowStatus();
 }
 
@@ -1015,13 +1075,11 @@ function fRaw(id) {
 
 // ── PROMPT RENDERERS ──────────────────────────────────────────────────
 function renderPP() {
-  const topic = f('pp-topic');
-  const outcome = f('pp-outcome');
-  const ideas = fRaw('pp-ideas') || '(leave blank)';
-  const audience = fRaw('pp-audience') || '(leave blank)';
-  const knowledge = fRaw('pp-knowledge') || '(leave blank)';
-  const angle = fRaw('pp-angle') || '(leave blank)';
-  const avoid = fRaw('pp-avoid') || '(leave blank)';
+  const topic    = f('pp-topic');
+  const outcome  = f('pp-outcome');
+  const audience = fRaw('pp-audience') || '(leave blank — planner will suggest)';
+  const knowledge= fRaw('pp-knowledge') || '(leave blank — planner will suggest)';
+  const avoid    = fRaw('pp-avoid') || '(leave blank)';
 
   return `## COURSE PLANNER INPUT
 
@@ -1033,19 +1091,11 @@ TOPIC_OR_WORKING_TITLE:
 TARGET_OUTCOME:
   ${outcome}
 
-# ── OPTIONAL ──────────────────────────────────────────────────
-
-ROUGH_IDEAS:
-  ${ideas}
-
 TARGET_AUDIENCE:
   ${audience}
 
 ASSUMED_KNOWLEDGE:
   ${knowledge}
-
-POSITIONING_ANGLE:
-  ${angle}
 
 THINGS_TO_AVOID:
   ${avoid}
@@ -1053,89 +1103,116 @@ THINGS_TO_AVOID:
 ---
 
 ## ROLE
-You are a curriculum architect and content strategist.
-Your job is to produce a minimal, focused course plan from a rough
-input — ready for a human to review, adjust, and approve before any
-content is produced.
-
-Minimal is the hard constraint: 3–5 parts maximum.
-Every part must earn its place. If two topics can be merged without
-losing clarity, merge them.
+You are a curriculum architect. Your job is to produce a structured course
+plan from a rough input — ready for human review before any content is
+produced.
 
 ## OUTPUT FORMAT
-Produce all sections below, in this exact order.
 
-### 1. COURSE IDENTITY
-TITLE:        [Final or working title — benefit-led, not topic-labelled]
-SUBTITLE:     [One sentence — what the course delivers for the learner]
-POSITIONING:  [1–2 sentences — what angle this takes and why it is
-               different from a generic course on this topic]
+### COURSE IDENTITY
+TITLE:        [Benefit-led title — not topic-labelled]
+SUBTITLE:     [One sentence — what it delivers for the learner]
+POSITIONING:  [1–2 sentences — what makes this different from a generic
+               course on this topic]
 
-### 2. AUDIENCE PROFILE
-TARGET_AUDIENCE:   [Specific — who this is for]
-ASSUMED_KNOWLEDGE: [What they know coming in]
-CORE_PROBLEM:      [The specific frustration this course solves]
+### AUDIENCE PROFILE
+WHO:      [Specific — who this is for]
+KNOWS:    [What they know coming in]
+PROBLEM:  [The specific frustration this course solves — their words,
+           not yours]
 
-### 3. COURSE STRUCTURE
-For each part (3–5 total):
+### COURSE STRUCTURE
 
-  PART [N]: [Title — outcome-framed, not topic-labelled]
-  ONE-LINER: [What this part teaches — one sentence]
-  POSITION:  [Why this part belongs here — one sentence]
-  FORMAT:    [full | short-form]
+VOLUME [N]: [Title]
+ONE-LINER:  [What this volume covers — one sentence]
 
-### 4. FLOW RATIONALE
-2–3 sentences on the logic of the part order.
+  PART [N.N]: [Title — outcome-framed, not topic-labelled]
+  ONE-LINER:  [What this part teaches — one sentence]
 
-### 5. COURSE-LEVEL CTA
-The single action you want the learner to take after finishing.
+    SLIDES:
+    - [Slide title]: [One sentence — what this slide establishes]
+    - ...
 
-### 6. REVIEW NOTES
-Flag: parts merged, topics left out, assumptions made, short-form decisions.
+  Repeat for all parts in this volume.
+
+Repeat for all volumes.
+
+### FLOW RATIONALE
+2–3 sentences on why the volumes are ordered this way.
+
+### REVIEW NOTES
+Flag: volumes merged, topics cut, assumptions made about audience or
+positioning that the human should confirm before proceeding.
+
+---
+
+### HANDOFF BLOCK
+[Emit this block verbatim at the end of your output.]
+
+SERIES_TITLE:      [Course title]
+TARGET_AUDIENCE:   [From Audience Profile → WHO]
+ASSUMED_KNOWLEDGE: [From Audience Profile → KNOWS]
+CORE_PROBLEM:      [From Audience Profile → PROBLEM]
+TONE:              [Your suggested default tone for this series — one phrase,
+                   e.g. "direct, practical, zero fluff"]
 
 ## RULES
-- 3–5 parts. Hard limit.
-- Part titles must be outcome-framed.
+- Volumes: 2–5. Hard limit.
+- Parts per volume: 3–8.
+- Slides per part: 6–10.
+- All titles must be outcome-framed.
+  BAD:  "Introduction to Prompts"
+  GOOD: "Why Your Prompts Keep Failing"
+- Slide entries: title + one sentence only. No sub-bullets.
+- If optional fields were blank, make a suggestion and flag it in
+  Review Notes so the human can confirm or override.
 - Stop at the plan. Do not produce Master Drafts or any content.
 
 ## SELF-CHECK (append verbatim)
-□ 3–5 parts — no exceptions
-□ Every part has title, one-liner, position, and format flag
-□ Flow Rationale explains the part order logic
-□ Review Notes flag all assumptions and short-form decisions
+□ 2–5 volumes, each with 3–8 parts, each with 6–10 slides
+□ All titles are outcome-framed
+□ Slide entries are title + one sentence only
+□ Flow Rationale explains volume order
+□ Handoff Block present and complete
 □ No content produced — plan only`;
 }
 
 function renderP0() {
-  const course = f('p0-course');
-  const audience = f('p0-audience');
-  const knowledge = f('p0-knowledge');
-  const partnum = f('p0-partnum');
-  const parttitle = f('p0-parttitle');
-  const tone = f('p0-tone');
-  const slides = f('p0-slides');
-  const takeaway = f('p0-takeaway');
-  const cta = f('p0-cta');
-  const examples = fRaw('p0-examples') || '(leave blank)';
-  const avoid = fRaw('p0-avoid') || '(leave blank)';
+  const course       = f('p0-course');
+  const audience     = f('p0-audience');
+  const knowledge    = f('p0-knowledge');
+  const coreproblem  = f('p0-coreproblem');
+  const toneDefault  = f('p0-tone-default');
+  const toneOverride = fRaw('p0-tone-override');
+  const tone         = toneOverride ? toneOverride + ' [override for this part]' : toneDefault;
+  const volnum       = f('p0-volnum');
+  const voltitle     = f('p0-voltitle');
+  const partnum      = f('p0-partnum');
+  const parttitle    = f('p0-parttitle');
+  const slides       = f('p0-slides');
+  const takeaway     = f('p0-takeaway');
+  const cta          = f('p0-cta');
+  const examples     = fRaw('p0-examples') || '(leave blank)';
+  const avoid        = fRaw('p0-avoid') || '(leave blank)';
 
   return `## MASTER DRAFT INPUT
 
-# ── FROM THE PLANNER ──────────────────────────────────────────
+# ── HANDOFF BLOCK — copy from PP output, do not rewrite ───────
 
-COURSE_SERIES:     ${course}
+SERIES_TITLE:      ${course}
 TARGET_AUDIENCE:   ${audience}
 ASSUMED_KNOWLEDGE: ${knowledge}
+CORE_PROBLEM:      ${coreproblem}
+TONE:              ${tone}
 
-# ── PER-PART FIELDS ───────────────────────────────────────────
+# ── PER-PART FIELDS — fill fresh for each part ────────────────
 
-PART_NUMBER:  ${partnum}
-PART_TITLE:   ${parttitle}
+VOLUME_NUMBER: ${volnum}
+VOLUME_TITLE:  ${voltitle}
+PART_NUMBER:   ${partnum}
+PART_TITLE:    ${parttitle}
 
-TONE:
-  ${tone}
-
-KEY_SLIDES_FROM_OUTLINE:
+SLIDES_FROM_OUTLINE:
   ${slides}
 
 PRIMARY_TAKEAWAY:
@@ -1170,7 +1247,7 @@ Write it as if explaining to a smart 16-year-old.
 The stakes. What stays broken if the audience never learns this.
 
 ### 3. SLIDE-BY-SLIDE BREAKDOWN
-For each item in KEY_SLIDES_FROM_OUTLINE:
+For each item in SLIDES_FROM_OUTLINE:
   SLIDE TITLE:
   MAIN POINT:        [1 sentence]
   TALKING POINTS:    [3–5 bullets, conversational not academic]
@@ -1181,13 +1258,14 @@ One strong real-world analogy. Name it clearly (e.g. "THE RECIPE ANALOGY").
 
 ### 5. WORKED EXAMPLE
 A concrete before/after or step-by-step example.
+Must match ASSUMED_KNOWLEDGE — no unexplained jargon.
 
 ### 6. INSIGHT BLOCK (exactly 5 entries)
   TAKEAWAY: "I now know that [statement]."
   WATCH OUT: [Most common way people get this wrong — one sentence]
 
 ### 7. CALL TO ACTION
-The CTA expanded into 2–3 sentences of motivation.
+The CTA expanded into 2–3 sentences of motivation. Must feel earned.
 
 ## RULES
 - Do not invent information not implied by the input.
@@ -1207,9 +1285,9 @@ The CTA expanded into 2–3 sentences of motivation.
 }
 
 function renderPA() {
-  const draft = fRaw('pa-draft') || '[PASTE COMPLETED MASTER DRAFT HERE]';
+  const draft    = fRaw('pa-draft') || '[PASTE COMPLETED MASTER DRAFT HERE]';
   const pagesize = fRaw('pa-pagesize') || 'A4';
-  const color = fRaw('pa-color') || '#2563eb';
+  const color    = fRaw('pa-color') || '#2563eb';
 
   return `## DOCX HANDOUT INPUT
 
@@ -1255,33 +1333,43 @@ Output the spec, then pause with: "Spec complete. Proceeding to script."
 ## STEP 2 — NODE.JS SCRIPT
 Produce a complete, runnable Node.js script using the docx npm package.
 The script must generate a file named:
-  [COURSE_SERIES]-Part[N]-Handout.docx
+  [SERIES_TITLE]-[VOLUME_NUMBER]-Part[N]-Handout.docx
 
 ## DOCUMENT STRUCTURE
 
-COVER PAGE → WHAT YOU'LL LEARN → MAIN BODY CHAPTERS →
-WORKED EXAMPLE CHAPTER → KEY TAKEAWAYS PAGE → CTA PAGE
+COVER PAGE (series title, volume, part number + title, one-line descriptor)
+→ WHAT YOU'LL LEARN (Why This Matters intro + 5 Takeaways)
+→ MAIN BODY CHAPTERS (3–5 chapters, prose not bullet lists)
+→ WORKED EXAMPLE CHAPTER (Before/After blocks)
+→ KEY TAKEAWAYS PAGE (5 Takeaways + Anchor Analogy callout)
+→ CTA PAGE (CTA text + series/volume/part footer line)
 
 ## DOCX-JS RULES
 - Install: npm install docx
 - Arial body font, size 24 (12pt)
-- Heading 1: Arial, size 32, bold
-- Heading 2: Arial, size 28, bold
+- Heading 1: Arial, size 32, bold — chapter headings
+- Heading 2: Arial, size 28, bold — sub-sections only
 - Never use \\n inside TextRun — use separate Paragraph elements
 - Never use unicode bullet characters — use LevelFormat.BULLET
 - Page size ${pagesize}: A4 = { width: 11906, height: 16838 }
-- Tables: WidthType.DXA, ShadingType.CLEAR only
-- BRAND_ACCENT_COLOR: apply to Heading 1 and callout box borders. Strip #.
+            US Letter = { width: 12240, height: 15840 }
+  Margins: top/right/bottom/left = 1440 (1 inch)
+- Tables: WidthType.DXA only. ShadingType.CLEAR only.
+  Cell margins: { top: 80, bottom: 80, left: 120, right: 120 }
+- Callout boxes: single-cell table, left border accent, light shading
+- BRAND_ACCENT_COLOR: apply to Heading 1 and callout borders. Strip #.
+- Validate: python scripts/office/validate.py [filename].docx
 
 ## SELF-CHECK (append verbatim)
 □ Document Spec produced before script
-□ Script runs without error
-□ Cover page has course series, part number, and title
+□ Script runs without error — docx file is generated
+□ Cover page has series title, volume, part number, and part title
 □ Content grouped into 3–5 broad chapters
 □ All 5 Takeaways appear on the summary page
 □ Worked Example has visible Before/After blocks
 □ Warning callout boxes present for all Watch Out items
-□ CTA page is the final page`;
+□ CTA page is the final page
+□ Document reads cleanly with no video context needed`;
 }
 
 function renderPB() {
@@ -1310,8 +1398,6 @@ no speaker notes. Every design decision should serve readability in PDF form.
 ## OUTPUT FORMAT
 Output only valid MARP markdown. No prose outside the MARP structure.
 
-Start with the frontmatter block:
-
 ---
 marp: true
 ${theme}
@@ -1319,44 +1405,50 @@ paginate: true
 size: ${ratio}
 ---
 
-Then produce slides in this exact sequence:
-
 SLIDE 1 — TITLE SLIDE
-SLIDE 2 — WHAT YOU'LL LEARN (5 Takeaways as "You'll be able to…" bullets)
+  # [Volume N] · [Part N.N]: [Part Title]
+  ## [Series Title]
+  One-line descriptor (from Core Concept, first sentence)
+
+SLIDE 2 — WHAT YOU'LL LEARN
+  5 Takeaways rewritten as "You'll be able to…" statements
+
 SLIDES 3 to N — ONE SLIDE PER ITEM in Slide-by-Slide Breakdown
   ## [Slide Title]
   - [Talking point] (max 5 bullets, max 12 words per bullet)
   <!-- [VISUAL: description] -->
-SLIDE N+1 — ANCHOR ANALOGY (3–5 short bullets or two-column layout)
+
+SLIDE N+1 — ANCHOR ANALOGY (3–5 bullets or two-column layout)
 SLIDE N+2 — WORKED EXAMPLE (Before / After visible blocks)
-SLIDE N+3 — INSIGHT BLOCK (What You Now Know — 5 bullets + Watch Out sub-bullets)
-SLIDE N+4 — CTA SLIDE
+SLIDE N+3 — INSIGHT BLOCK (5 Takeaways + Watch Out sub-bullets)
+SLIDE N+4 — CTA SLIDE (series title, volume, part number sub-line)
 
 ## RULES
 - Maximum 5 bullets per slide body.
 - Maximum 12 words per bullet.
 - No prose paragraphs on any slide.
 - No speaker notes.
-- Prompt text or code examples must use fenced code blocks.
+- Prompt/code examples must use fenced code blocks with language identifier.
 - Visual suggestions go in HTML comments: <!-- [VISUAL: ...] -->
 
 ## SELF-CHECK (append verbatim)
-□ Valid MARP frontmatter — correct theme name applied
+□ Valid MARP frontmatter — correct theme applied
+□ Title slide includes volume number and part number
 □ No slide has more than 5 bullets
 □ No bullet exceeds 12 words
 □ No prose paragraphs on any slide
 □ Worked Example slide has visible Before/After blocks
-□ Code/prompt examples use fenced code blocks with language identifier
+□ Code/prompt examples use fenced code blocks
 □ No speaker notes present
-□ File exports to PDF without error via MARP CLI or VS Code`;
+□ File exports to PDF without error`;
 }
 
 function renderPE() {
-  const draft = fRaw('pe-draft') || '[PASTE COMPLETED MASTER DRAFT OR PP OUTPUT HERE]';
+  const draft = fRaw('pe-draft') || '[PASTE COMPLETED MASTER DRAFT OR PP HANDOFF BLOCK HERE]';
 
   return `## PE INPUT
 
-MASTER_DRAFT_OR_PP_OUTPUT:
+MASTER_DRAFT_OR_HANDOFF_BLOCK:
 ${draft}
 
 ---
@@ -1370,7 +1462,7 @@ Output all five blocks below, clearly labelled.
 
 --- YOUTUBE / REEL TITLE ---
 [Max 60 characters. Lead with benefit or problem solved.
-Include part number. No clickbait that doesn't deliver.]
+Include volume and part number. No clickbait that doesn't deliver.]
 
 --- LINKEDIN POST ---
 [150–200 words.
@@ -1393,16 +1485,17 @@ Describe what the reader learns. End with a soft CTA verb.]
 --- POSITIONING FLAG ---
 [yes / no]
 [If yes: note in one sentence what the title-writing process revealed
-about positioning that differs from the PP framing.]
+about positioning that differs from the PP framing. Bring this back
+to the Course Planner before the next course iteration.]
 
 ## RULES
 - YouTube title: no ALL CAPS, no emoji, lead with keyword.
 - Instagram: first 125 characters must work as a standalone sentence.
 - Never duplicate the same sentence verbatim across platforms.
-- Match TONE from the Master Draft throughout.
+- Match TONE from the Master Draft (or PP Handoff Block if short-form).
 
 ## SELF-CHECK (append verbatim)
-□ YouTube title ≤ 60 characters
+□ YouTube title ≤ 60 characters, includes volume and part reference
 □ LinkedIn post 150–200 words with correct structure
 □ Instagram hook works as standalone in first 125 characters
 □ Instagram has 20–25 hashtags
@@ -1464,7 +1557,7 @@ function markDoneUI(stage) {
 }
 
 function updateFlowStatus() {
-  const stages = ['pp', 'p0', 'pa', 'pe'];
+  const stages = ['pp','p0','pa','pe'];
   stages.forEach(s => {
     const el = document.getElementById('fstatus-' + s);
     if (!el) return;
