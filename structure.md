@@ -1,611 +1,369 @@
-# Content Generation Ecosystem — v5.4
-> Multi-Platform Content Processor · 4 Stages · 2 Active Formats · 1 Source of Truth
-
----
-
-## What Changed from v5.3
-
-| Change | Rationale |
-|---|---|
-| CP Handoff Block: `THINGS_TO_AVOID` field added | Field was accepted at CP Input but silently dropped at Handoff Block, causing series-level exclusions to vanish before MD. |
-| CP Review Flags: TONE confirmation instruction added | TONE was AI-suggested but never explicitly human-verified before propagating to every part in the series. |
-| CP Part entry: optional `FORMAT_HINT` field added | Short-form parts could not be flagged at planning stage — writers only discovered this at MD or later. |
-| MD output: `TONE USED` header field added | TONE override in Per-Part Fields was invisible to format prompts, which had to infer tone from prose. |
-| MD rules: Section 0 / Section 3 reconciliation rule added | No rule existed for when a planned slide title changed during drafting, causing Section 0 and Section 3 to silently diverge. |
-| MD Section 7 rule: CTA expand instruction clarified | "Expand into 2–3 sentences of motivation" was ambiguous about sentence order and structure. |
-| MD rules: VOLUME_PARTS switch trigger made explicit | Trigger to update VOLUME_PARTS when moving to a new volume was implied but never stated as a rule. |
-| HO Role line: "docx-js" replaced with "`docx` npm package" | "docx-js" is a browser-side library; `docx` (npm) is the correct server-side package. |
-| HO rules: slide-to-chapter grouping heuristic added | No guidance existed for how to group a variable number of slides into 3–5 chapters. |
-| HO Self-Check: `validate.py` removed; manual check substituted | `validate.py` was asserted as if it existed but was never defined or linked anywhere in the ecosystem. |
-| SL Self-Check: slide count verification added | SL had no check that its slide count matched the final MD breakdown (not the initial Section 0 plan). |
-| TP rules: Positioning Flag storage path added | Positioning Flag had no instruction for where to record or retrieve it between sessions. |
-| Consistency Gate: embedded into HO and SL Self-Checks | Gate existed as a standalone section but was not enforced at the point where format outputs are finalised. |
-| Revision Loop: Section 0 / Section 3 mismatch row added | No revision entry existed for when planned slide titles and the breakdown diverged. |
-| Revision Loop: short-form path revision entry added | No revision guidance existed for a CP → TP short-form run where TP output was off. |
-
-### What did not change
-The Golden Rule, Process Flow, Format Selection Guide, CP Input (5 fields), CP Prompt structure, MD Input structure, and the SL and HO prompt structures are unchanged except for the specific additions noted above.
+# Content Generation Ecosystem — v6.0
+> 2 Stages · 2 Formats · 1 Source of Truth
 
 ---
 
 ## Process Flow
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│  STAGE 0            STAGE 1          STAGE 2                                │
-│                                                                              │
-│  CP  →  MD  →  Format Outputs                                               │
-│                     ↑                                                        │
-│  Run once.          Consumes the      HO  → DOCX handout                    │
-│  Produces a         CP Handoff         SL  → MARP → PDF                    │
-│  Handoff Block.     Block directly.   TP  → Title & description pack        │
-│  Review before                                                               │
-│  proceeding.        Run once per      SHORT-FORM PATH:                      │
-│                     part.             CP → TP only                          │
-│                                       (skip MD, HO, SL)                     │
-└─────────────────────────────────────────────────────────────────────────────┘
+STAGE 0          STAGE 1
+CP  →  MD  →  HO (DOCX handout)
+               SL (MARP slides)
 ```
 
-> **Core Design Principle:** Each course is scoped once at Stage 0. Each part is
-> drafted once at Stage 1. Every format is a transformation of the same source —
-> not a rewrite. You never think the same thought twice.
-
----
-
-## Format Selection Guide
-
-Run this check before starting any part:
-
-| Part type | Run | Skip |
-|---|---|---|
-| Full teaching unit — handout + slides | MD → HO · SL · TP | — |
-| Full teaching unit — handout only | MD → HO · TP | SL |
-| Full teaching unit — slides only | MD → SL · TP | HO |
-| Short explainer / newsletter part | TP only (short-form path) | MD · HO · SL |
-| Blog / Substack only | TP only (short-form path) | MD · HO · SL |
-
-> **Always run TP** regardless of path. Consistent naming across channels
-> protects discoverability.
->
-> **Short-form path:** Use when the part is a standalone explainer or Substack
-> essay that does not require slides or a handout. Go directly from the CP
-> Handoff Block to TP. No MD required. If TP output is generic on the
-> short-form path, enrich CORE_PROBLEM and TARGET_AUDIENCE in the CP Handoff
-> Block and re-run TP — do not patch the TP prompt itself.
+- **CP** runs once. Produces a plan for human review.
+- **MD** runs once per volume. Produces one draft block per part.
+- **HO** and **SL** each consume a single PART DRAFT block from the MD output.
 
 ---
 
 ## Stage 0 — CP (Course Planner)
 
-**Run once per course. Review and edit the output before proceeding to Stage 1.**
-
-CP produces two things: a readable Course Structure for human review, and
-a Handoff Block at the end that feeds directly into MD. Do not skip the review
-step — the Handoff Block carries every downstream assumption.
-
----
+**Run once. Review and edit before proceeding to Stage 1.**
 
 ### CP Input
 
 ```
-## COURSE PLANNER INPUT
-
-# ── REQUIRED ──────────────────────────────────────────────────────────
-
 TOPIC_OR_WORKING_TITLE:
-  {{ e.g. "Prompt Engineering 101" }}
-
 TARGET_OUTCOME:
-  {{ What should someone be able to DO after completing this course? }}
-  {{ e.g. "Write prompts that consistently produce usable AI outputs" }}
-
 TARGET_AUDIENCE:
-  {{ Who is this for? Leave blank → planner will suggest }}
-
 ASSUMED_KNOWLEDGE:
-  {{ What do they already know? Leave blank → planner will suggest }}
-
+TONE:
 THINGS_TO_AVOID:
-  {{ Tone, words, framings to exclude — leave blank if none }}
 ```
-
----
 
 ### CP Prompt
 
 ```
 ## ROLE
-You are a curriculum architect. Your job is to produce a structured course
-plan from a rough input — ready for human review before any content is
-produced.
+You are a curriculum architect. Produce a structured course plan from
+the input below — ready for human review before any content is written.
 
 ## INPUT
-{{ PASTE COMPLETED COURSE PLANNER INPUT }}
+{{ PASTE CP INPUT }}
 
-## OUTPUT FORMAT
+## OUTPUT
 
 ### COURSE IDENTITY
-TITLE:        [Benefit-led title — not topic-labelled]
-SUBTITLE:     [One sentence — what it delivers for the learner]
-POSITIONING:  [1–2 sentences — what makes this different from a generic
-               course on this topic]
+TITLE:       [Benefit-led — not topic-labelled]
+SUBTITLE:    [One sentence — what it delivers for the learner]
 
 ### AUDIENCE PROFILE
-WHO:      [Specific — who this is for]
+WHO:      [Who this is for]
 KNOWS:    [What they know coming in]
-PROBLEM:  [The specific frustration this course solves — their words,
-           not yours]
+PROBLEM:  [The specific frustration this course solves]
 
 ### COURSE STRUCTURE
 
 VOLUME [N]: [Title]
 ONE-LINER:  [What this volume covers — one sentence]
 
-  PART [N.N]: [Title — outcome-framed, not topic-labelled]
+  PART [N.N]: [Outcome-framed title — not topic-labelled]
   ONE-LINER:  [What this part teaches — one sentence]
-  FORMAT_HINT: [full | short-form — omit if uncertain]
-
-  Repeat for all parts in this volume.
-
-Repeat for all volumes.
-
-### FLOW NOTE
-[One sentence only — why the volumes are ordered this way.]
-
-### REVIEW FLAGS
-[Bullet list only. Flag: volumes merged, topics cut, assumptions made
- about audience, positioning, or TONE that the human should confirm.
- Always flag TONE for human confirmation — do not treat the suggestion
- as approved.
- No prose — flags only. Omit this section entirely if nothing to flag.]
-
----
 
 ### HANDOFF BLOCK
-[Emit this block verbatim at the end. The human copies it into MD input.]
+[Copy this into MD Input unchanged.]
 
 SERIES_TITLE:      [Course title]
-TARGET_AUDIENCE:   [From Audience Profile → WHO]
-ASSUMED_KNOWLEDGE: [From Audience Profile → KNOWS]
-CORE_PROBLEM:      [From Audience Profile → PROBLEM]
-TONE:              [Your suggested default tone for this series — one phrase,
-                   e.g. "direct, practical, zero fluff"]
-                   ⚠ CONFIRM OR OVERRIDE THIS BEFORE RUNNING MD OR TP.
-THINGS_TO_AVOID:   [From CP Input — series-level exclusions. "None" if blank.]
+TARGET_AUDIENCE:   [From Audience Profile]
+ASSUMED_KNOWLEDGE: [From Audience Profile]
+CORE_PROBLEM:      [From Audience Profile]
+TONE:              [From input — one phrase, e.g. "direct, practical, no fluff"]
+THINGS_TO_AVOID:   [From input — "None" if blank]
 
 COURSE_STRUCTURE:
   VOLUME 1: [Title]
-    PART 1.1: [Title] — [one-liner] — FORMAT_HINT: [full | short-form]
-    PART 1.2: [Title] — [one-liner] — FORMAT_HINT: [full | short-form]
-    ...
+    PART 1.1: [Title] — [one-liner]
+    PART 1.2: [Title] — [one-liner]
   VOLUME 2: [Title]
-    PART 2.1: [Title] — [one-liner] — FORMAT_HINT: [full | short-form]
+    PART 2.1: [Title] — [one-liner]
     ...
-  [All volumes and parts listed here]
 
 ## RULES
-- Volumes: 2–5. Hard limit.
-- Parts per volume: 3–8.
-- No slide breakdown in CP output — slides are planned in Stage 1.
+- Volumes: 1–3. Parts per volume: 2–5.
 - All part titles must be outcome-framed.
   BAD:  "Introduction to Prompts"
   GOOD: "Why Your Prompts Keep Failing"
-- Flow Note: exactly one sentence.
-- Review Flags: bullet points only, no prose. Omit if nothing to flag.
-- Always include a Review Flag prompting the human to confirm or override
-  the TONE suggestion before any downstream stage runs.
-- FORMAT_HINT: set to "short-form" when a part is a standalone explainer,
-  newsletter section, or Substack essay that will not need slides or a
-  handout. Set to "full" otherwise. Omit if genuinely uncertain.
-- If optional fields were blank, make a suggestion and include it as a
-  Review Flag so the human can confirm or override.
-- THINGS_TO_AVOID must appear in the Handoff Block even if the value
-  is "None" — never omit the field.
-- Stop at the plan. Do not produce MDs or any content.
-
-## SELF-CHECK (append verbatim)
-□ 2–5 volumes, each with 3–8 parts
-□ All part titles are outcome-framed
-□ No slide breakdown present
-□ Flow Note is exactly one sentence
-□ Review Flags are bullets only (or section omitted)
-□ Review Flag present for TONE confirmation
-□ Handoff Block present with full COURSE_STRUCTURE
-□ Handoff Block includes THINGS_TO_AVOID field (value or "None")
-□ FORMAT_HINT present on each part entry
-□ No content produced — plan only
+- Do not produce any content — plan only.
 ```
 
 ---
 
 ## Stage 1 — MD (Master Draft)
 
-**One prompt per part. Do not run HO, SL, or TP without a completed,
-reviewed MD.**
-
-The MD input has two sections: the Handoff Block (copied once from CP,
-unchanged for every part in the series, except VOLUME_PARTS which is
-updated when moving to a new volume) and the Per-Part Fields (filled fresh
-for each part).
-
----
+**One run per volume. Extract individual PART DRAFT blocks before running HO or SL.**
 
 ### MD Input
 
 ```
 ## MD INPUT
 
-# ── HANDOFF BLOCK — copy from CP output ──────────────────────────────────
-# VOLUME_PARTS: replace with the current volume's part list when you
-# move to a new volume. Everything else stays unchanged for the full series.
-# Before each run: confirm VOLUME_PARTS matches the volume of PART_NUMBER.
-# If VOLUME_NUMBER changed since your last run, update VOLUME_PARTS now.
+# ── HANDOFF BLOCK (from CP, unchanged) ───────────────────────────────────
 
-SERIES_TITLE:      {{ From CP Handoff Block }}
-TARGET_AUDIENCE:   {{ From CP Handoff Block }}
-ASSUMED_KNOWLEDGE: {{ From CP Handoff Block }}
-CORE_PROBLEM:      {{ From CP Handoff Block }}
-TONE:              {{ From CP Handoff Block — confirmed or overridden at CP
-                      review. Override here if this part needs a different
-                      register. }}
-THINGS_TO_AVOID:   {{ From CP Handoff Block — series-level exclusions }}
+SERIES_TITLE:
+TARGET_AUDIENCE:
+ASSUMED_KNOWLEDGE:
+CORE_PROBLEM:
+TONE:
+THINGS_TO_AVOID:
 
-VOLUME_PARTS:
-  {{ Paste the part list for the CURRENT volume only, from COURSE_STRUCTURE }}
-  {{ e.g.                                                                    }}
-  {{   PART 2.1: [Title] — [one-liner]                                       }}
-  {{   PART 2.2: [Title] — [one-liner]                                       }}
-  {{   PART 2.3: [Title] — [one-liner]                                       }}
+# ── VOLUME FIELDS ─────────────────────────────────────────────────────────
 
-# ── PER-PART FIELDS — fill for this part ──────────────────────────────
+VOLUME_NUMBER:
+VOLUME_TITLE:
 
-VOLUME_NUMBER:  {{ e.g. "Volume 2" }}
-VOLUME_TITLE:   {{ Volume title from planner }}
-PART_NUMBER:    {{ e.g. "Part 2.3" }}
-PART_TITLE:     {{ Part title from planner }}
+# ── VOLUME_PARTS_DETAIL ───────────────────────────────────────────────────
+# Fill all fields before running MD.
 
-PRIMARY_TAKEAWAY:
-  {{ The single most important thing the learner walks away knowing }}
+VOLUME_PARTS_DETAIL:
 
-CTA:
-  {{ The specific action for this part — one sentence }}
+  PART [N.N]: [Part title]
+  ONE_LINER:          [From COURSE_STRUCTURE]
+  PRIMARY_TAKEAWAY:   [The single most important thing the learner walks away knowing]
+  CTA:                [The specific action for this part — one sentence]
+  EXAMPLES_OR_ANALOGIES: [Any examples you already have — leave blank if none]
+  THINGS_TO_AVOID_PART:  [Additional exclusions — leave blank if none]
 
-# ── OPTIONAL ──────────────────────────────────────────────────────────
-
-EXAMPLES_OR_ANALOGIES:
-  {{ Any examples you already have — leave blank otherwise }}
-
-THINGS_TO_AVOID_PART:
-  {{ Additional exclusions for this part beyond THINGS_TO_AVOID above }}
+  [Repeat for every part in this volume]
 ```
-
----
 
 ### MD Prompt
 
 ```
 ## ROLE
-You are an expert instructional content writer and curriculum architect.
-Your job is to produce a definitive Master Content Draft from the input above.
-This draft is the single source of truth for all downstream formats.
-Write it with that responsibility in mind.
-Maintain TONE exactly throughout — no academic drift.
+You are an instructional content writer. Produce a complete Master Draft
+for the entire volume — one draft block per part — from the input above.
+
+Draft every part with full awareness of every other part in the volume.
+No part may introduce a concept belonging to a later part. No part may
+re-explain a concept already covered earlier — a brief reference is fine,
+a re-explanation is not.
 
 ## INPUT
-{{ PASTE COMPLETED MASTER DRAFT INPUT }}
+{{ PASTE MD INPUT }}
 
-## OUTPUT HEADER
-Before any section, output this single line so format prompts can consume it:
+## VOLUME ORIENTATION
+Before drafting, output this block:
 
-  TONE USED: [value of TONE from input — note if this is a per-part override]
+  VOLUME: [Number + Title]
+  PART SEQUENCE: [List all parts and their one-liners]
+  CONCEPT MAP:
+    [Concept] → introduced Part [N.N], may be referenced in [N.N, N.N]
+  SCOPE LOCKS:
+    Part [N.N]: must not cover [X] — belongs to Part [N.N]
 
-## VOLUME CONTEXT
-Before writing, orient yourself within the volume:
-- VOLUME_PARTS lists every part in this volume in sequence.
-- PART_NUMBER tells you which part you are writing right now.
-- Do not cover ground belonging to other parts listed in VOLUME_PARTS.
-- You may briefly reference an earlier part as established knowledge,
-  but do not summarise it.
-- Do not reveal or pre-teach content from parts that come after this one.
+## PART DRAFTING
+After the orientation, draft each part in sequence.
 
-## SLIDE PLANNING
-Before writing the breakdown, generate 6–10 slide titles for this part.
-Base them on PART_TITLE and PRIMARY_TAKEAWAY.
-Each slide title must be outcome-framed (not topic-labelled).
-Output these as Section 0 before any other section.
+Open each part with:
+  ══════════════════════════════════════════════
+  PART DRAFT [N.N]: [Part Title]
+  TONE USED: [Series TONE]
+  ══════════════════════════════════════════════
 
-These titles are a working plan, not a contract. If a title needs to change
-during the breakdown — because a slide was split, merged, or reframed —
-update Section 0 to match before finalising. Section 0 must always reflect
-the actual breakdown, never the initial plan.
+Produce all 6 sections below for every part.
 
-## OUTPUT FORMAT
+## OUTPUT FORMAT (per part)
 
 ### 0. PLANNED SLIDES
-  - [Slide title]: [One sentence — what this slide establishes]
-  - ...
-  [6–10 entries. Must match the final Section 3 headings exactly.]
+[6–8 outcome-framed slide titles. Must match Section 3 headings exactly.]
 
 ### 1. CORE CONCEPT (2–3 sentences)
-The central idea of this part, stated plainly.
-No jargon unless immediately defined.
-Write it as if explaining to a smart 16-year-old.
+The central idea, stated plainly. No jargon unless immediately defined.
 
 ### 2. WHY THIS MATTERS (2–3 sentences)
-The stakes. What stays broken if the audience never learns this.
+The stakes. What stays broken if the learner never learns this.
 
 ### 3. SLIDE-BY-SLIDE BREAKDOWN
-For each slide in the finalised Section 0:
+For each slide in Section 0:
 
   SLIDE TITLE:
-  MAIN POINT:        [1 sentence — the single idea this slide teaches]
-  TALKING POINTS:    [3–5 bullets, conversational not academic]
-  VISUAL SUGGESTION: [What should appear on screen — diagram, code, photo]
+  MAIN POINT:     [1 sentence — the single idea this slide teaches]
+  TALKING POINTS: [3–5 bullets, conversational]
+  VISUAL:         [What should appear on screen]
 
 ### 4. ANCHOR ANALOGY
-One strong real-world analogy that makes the core concept click.
-Name it clearly (e.g. "THE RECIPE ANALOGY") so downstream prompts
-can reference it by name.
+One real-world analogy that makes the core concept click.
+Name it clearly (e.g. "THE RECIPE ANALOGY").
 
 ### 5. WORKED EXAMPLE
 A concrete before/after or step-by-step example.
-Must match ASSUMED_KNOWLEDGE — no unexplained jargon.
+No jargon beyond ASSUMED_KNOWLEDGE.
 
-### 6. INSIGHT BLOCK (exactly 5 entries)
-Format each entry as:
+### 6. CALL TO ACTION
+Restate the CTA as the first sentence. Add 1–2 sentences on why it matters now.
+Total: 2–3 sentences.
 
-  TAKEAWAY: "I now know that [statement]."
-  WATCH OUT: [The most common way people get this wrong — one sentence]
-
-### 7. CALL TO ACTION
-Restate the CTA from the input as the first sentence.
-Then add 1–2 sentences explaining why this action matters now.
-Total: 2–3 sentences. The first sentence must contain the action itself.
+Close each part with:
+  ── END PART DRAFT [N.N] ──────────────────────
 
 ## RULES
-- Do not invent information not implied by the input.
-- Match TONE exactly throughout — no academic drift.
-- If EXAMPLES_OR_ANALOGIES were provided, use them. Do not replace them.
-- Every section must be present. Do not skip or merge.
+- Complete VOLUME ORIENTATION before any part draft.
+- Every section (0–6) must be present for every part.
+- Section 0 and Section 3 must match exactly at finalisation.
+- Enforce SCOPE LOCKS — correct drift before continuing.
+- If EXAMPLES_OR_ANALOGIES were provided, use them.
 - Words in THINGS_TO_AVOID and THINGS_TO_AVOID_PART must not appear
-  anywhere in the draft.
-- Use VOLUME_PARTS for orientation only — do not summarise other parts.
-- Section 0 and Section 3 must be in sync at finalisation.
-  If any slide title changed during drafting, update Section 0 before output.
-
-## SELF-CHECK (append verbatim)
-□ TONE USED header present before Section 0
-□ Section 0 present with 6–10 outcome-framed slide titles
-□ Section 0 titles match Section 3 headings exactly
-□ All 7 sections present and non-empty
-□ Core Concept ≤ 3 sentences
-□ Exactly 5 entries in Insight Block
-□ Anchor Analogy is named and labelled
-□ Worked Example requires no knowledge beyond ASSUMED_KNOWLEDGE
-□ No content repeated from or pre-taught from other VOLUME_PARTS entries
-□ Tone matches TONE USED — zero academic drift
-□ THINGS_TO_AVOID and THINGS_TO_AVOID_PART words do not appear
-□ Section 7 first sentence contains the CTA action
+  in the relevant part draft.
+- Match TONE exactly — no academic drift.
 ```
 
 ---
 
 ## Stage 2 — Format Prompts
 
-**Run any format independently after MD is approved.**
+**Extract the relevant PART DRAFT block from the MD output before running
+either format. Paste only that block — not the full volume output.**
 
 ---
 
-### HO — DOCX Handout Generator
+### HO — DOCX Handout (Detailed)
 
-**Output:** A structured Word document (.docx) used as a course handout,
-converted to PDF for distribution.
-
-**Two-part process:** HO produces a Document Spec first, then a rendering
-script. This decouples content from rendering — swap renderers without
-rewriting the spec.
-
----
+**Design intent:** A deep-read document. The learner should understand and
+apply the full lesson without watching the video. Talking points become
+prose paragraphs. Every Watch Out gets a warning box.
 
 #### HO Input
 
 ```
-## HO INPUT
-
-MASTER_DRAFT:
-  {{ PASTE COMPLETED MASTER DRAFT }}
-
-PAGE_SIZE:
-  {{ "A4" or "US Letter" — default: A4 }}
-
-BRAND_ACCENT_COLOR:
-  {{ Hex code — e.g. "#2563eb" — leave blank for default dark grey }}
+MASTER_DRAFT:     {{ PASTE SINGLE PART DRAFT BLOCK }}
+PAGE_SIZE:        {{ A4 or US Letter — default: A4 }}
+BRAND_ACCENT_COLOR: {{ Hex — leave blank for dark grey }}
 ```
-
----
 
 #### HO Prompt
 
 ```
 ## ROLE
-You are a professional instructional designer producing a Word document
-(.docx) course handout using the `docx` npm package (Node.js).
+You are an instructional designer producing a Word document (.docx)
+course handout using the docx npm package (Node.js).
 
-This document will be used as a course handout and converted to PDF
-for distribution. It must be clean, readable, and print-friendly.
-
-Structure content into broad chapters — group related slides together
-into coherent sections rather than making each slide a separate heading.
-Aim for 3–5 chapters maximum per part, regardless of slide count.
+This is a deep-read document. The learner must be able to understand
+and apply the full lesson from this document alone. Expand bullet points
+into prose. Give analogies space to land. Make every warning prominent.
 
 ## INPUT
-{{ PASTE DOCX HANDOUT INPUT }}
+{{ PASTE HO INPUT }}
 
 ## STEP 1 — DOCUMENT SPEC
-Before writing any code, output a Document Spec in this format:
+Before writing any code, output:
 
 CHAPTER LIST:
-  [List 3–5 chapter names and the slides each groups]
-  [Group slides by instructional phase, not equal distribution.
-   Suggested phases: Orientation · Core teaching · Application · Review.
-   Chapter boundaries must follow instructional meaning.]
-
-CONTENT MAP:
-  For each chapter:
-  - Chapter name
-  - Intro paragraph source (which slide Main Points to synthesise)
-  - Body content type (prose / procedural steps / mix)
-  - Callout boxes needed (tip / warning / visual placeholder)
-  - Whether Worked Example appears in this chapter
+  [3–5 chapters grouping slides by instructional phase:
+   Orientation · Core Teaching · Application · Synthesis]
 
 SPECIAL PAGES:
-  - What You'll Learn page: yes/no
-  - Key Takeaways page: yes/no
+  - What You'll Learn: yes/no
+  - Key Takeaways: yes/no
   - CTA page: yes/no
 
-Output the spec, then pause with:
-  "Spec complete. Proceeding to script."
+Output the spec, then continue to the script.
 
 ## STEP 2 — NODE.JS SCRIPT
-Produce a complete, runnable Node.js script using the docx npm package.
-Install with: npm install docx
-
-The script must generate a file named:
+Generate a file named:
   [SERIES_TITLE]-[VOLUME_NUMBER]-Part[N]-Handout.docx
 
 ## DOCUMENT STRUCTURE
 
 COVER PAGE:
-  - Series title (Heading 1 style)
-  - Volume number + title (Heading 2 style)
-  - Part number + part title (Heading 2 style)
-  - One-line descriptor (from Core Concept, first sentence)
-  - Page break after cover
+  Series title · Volume · Part number · Part title
+  First sentence of Core Concept as descriptor
+  Page break after
 
 WHAT YOU'LL LEARN:
-  - Short intro paragraph (from Why This Matters)
-  - Bulleted list of the 5 Takeaways (from Insight Block)
-  - Page break after section
+  Why This Matters (2–3 sentences)
+  5 bullets from Insight Block as "You will be able to…" statements
+  Page break after
 
-MAIN BODY — one chapter per logical grouping of slides:
-  For each chapter:
-  - Chapter heading (Heading 1)
-  - Intro paragraph (synthesise the slide Main Points into a
-    readable paragraph — do not list them as bullets)
-  - Body paragraphs expanding the Talking Points into prose
-  - [VISUAL PLACEHOLDER] as a styled callout box where
-    Visual Suggestion exists
-  - Numbered steps where content is procedural
-  - Warning callout box for each Watch Out from the Insight Block
+MAIN BODY — one chapter per instructional phase:
+  CHAPTER HEADING (Heading 1)
+  INTRO PARAGRAPH: Synthesise MAIN POINTS from slides in this chapter
+    into connected prose. Do not list Main Points as bullets.
+  BODY PARAGRAPHS: TALKING POINTS expanded into full prose (2–4 sentences
+    each). Procedural content only may use numbered lists.
+  VISUAL PLACEHOLDER: Bordered callout — "[VISUAL: {description}]"
+  WATCH OUT CALLOUT: One per Watch Out. Left border in brand colour.
+    Label "Watch out:" in bold.
+
+ANCHOR ANALOGY SECTION:
+  Heading: [Analogy Name] (Heading 1)
+  2–3 prose sentences in a named bordered callout.
 
 WORKED EXAMPLE CHAPTER:
-  - Heading: "In Practice: [short label]"
-  - Before block (shaded table cell, labelled "Before")
-  - After block (shaded table cell, labelled "After")
-  - 1–2 sentence explanation of what changed and why
+  Heading: "In Practice: [label]" (Heading 1)
+  Before block (shaded, labelled "Before" in bold)
+  After block (shaded, labelled "After" in bold)
+  Explanation: 2–3 sentences on what changed and why.
 
 KEY TAKEAWAYS PAGE:
-  - Heading: "What You Now Know"
-  - The 5 Takeaways as a numbered list
-  - Anchor Analogy in a bordered callout box, labelled with its name
-  - Page break after
+  "What You Now Know" (Heading 1)
+  5 Takeaways numbered, each followed by its Watch Out in muted text
+  Page break after
 
 CTA PAGE:
-  - Heading: "Your Next Step"
-  - CTA text (from Section 7 of master draft, full 2–3 sentences)
-  - Series title, volume number, and part number as footer line
+  "Your Next Step" (Heading 1)
+  Full CTA text (2–3 sentences)
+  Series · Volume · Part as footer line
 
 ## DOCX RULES
 - Install: npm install docx
-- Use Arial as default body font, size 24 (12pt)
-- Heading 1: Arial, size 32, bold — use for chapter headings
-- Heading 2: Arial, size 28, bold — use for sub-sections only
+- Body: Arial 24 (12pt), line spacing 1.15
+- Heading 1: Arial 32, bold | Heading 2: Arial 28, bold
 - Never use \n inside TextRun — use separate Paragraph elements
-- Never use unicode bullet characters — use LevelFormat.BULLET
-  with a numbering config
+- Never use unicode bullets — use LevelFormat.BULLET with numbering config
 - Page size: A4 = { width: 11906, height: 16838 }
             US Letter = { width: 12240, height: 15840 }
-  Margins: top/right/bottom/left = 1440 (1 inch)
-- Tables: always set width with WidthType.DXA, never PERCENTAGE
-  Tables need dual widths: columnWidths array AND width on each cell
-  Use ShadingType.CLEAR (never SOLID) for shading
-  Add cell margins: { top: 80, bottom: 80, left: 120, right: 120 }
-- Callout boxes: use a single-cell table with a left border accent
-  and light background shading (ShadingType.CLEAR)
-- BRAND_ACCENT_COLOR (if provided): apply to Heading 1 colour
-  and callout box left border. Strip the # before passing to docx.
-- Validate after generation: open the .docx in Word or LibreOffice
-  and confirm it renders without errors before distribution.
+  Margins: 1440 all sides
+- Tables: WidthType.DXA only. ShadingType.CLEAR only.
+  Cell margins: { top: 80, bottom: 80, left: 120, right: 120 }
+- BRAND_ACCENT_COLOR: apply to Heading 1 and all callout left borders.
+  Strip # before passing to docx.
 
-## CROSS-FORMAT CONSISTENCY (check before marking output complete)
-□ Core concept is stated the same way here as on MARP Slide 2
-□ CTA intent matches the MARP final slide
-□ Anchor Analogy uses the same name and framing as the MARP deck
-
-## OUTPUT RULES
-- Output the Document Spec first, then the complete Node.js script.
-- Every section from the master draft must appear in the document.
-- Do not invent content not in the master draft.
-- Write body sections in full prose — bullet lists only for
-  Takeaways, procedural steps, and explicit list content.
-- Match TONE USED from the MD output header.
-
-## SELF-CHECK (append verbatim)
-□ Document Spec produced before script
-□ Script runs without error — docx file is generated
-□ Cover page has series title, volume, part number, and part title
-□ Content grouped into 3–5 broad chapters by instructional phase
-□ All 5 Takeaways appear on the summary page
-□ Worked Example has visible Before/After blocks
-□ Warning callout boxes present for all Watch Out items
-□ CTA page is the final page
-□ Document reads cleanly with no video context needed
-□ Cross-format consistency gate passed (see above)
-□ TONE matches TONE USED from MD header
+## PROSE RULES
+- MAIN POINT → synthesised into chapter intro (never standalone)
+- TALKING POINTS → prose paragraphs (never copied verbatim)
+- ANCHOR ANALOGY → 2–3 prose sentences in named callout
+- WORKED EXAMPLE → full Before/After with explanation paragraph
+- CALL TO ACTION → CTA page, full 2–3 sentences
 ```
 
 ---
 
-### SL — MARP Slides Generator
+### SL — MARP Slides (Condensed)
 
-**Output:** A `.md` MARP file exported to PDF for sharing.
-No speaker notes. Clean static slides optimised for readability as a PDF.
-
----
+**Design intent:** A glanceable reference. One idea per slide, visible
+in under 10 seconds. Talking points distilled, not copied. The handout
+carries the detail — the deck carries the skeleton.
 
 #### SL Input
 
 ```
-## SL INPUT
-
-MASTER_DRAFT:
-  {{ PASTE COMPLETED MASTER DRAFT }}
-
-MARP_THEME:
-  {{ Paste your theme name or theme config exactly as it appears in your setup }}
-  {{ e.g. "theme: my-theme" or paste the full @theme block }}
-
-SLIDE_RATIO:
-  {{ "16:9" (default) or "4:3" }}
+MASTER_DRAFT: {{ PASTE SINGLE PART DRAFT BLOCK }}
+MARP_THEME:   {{ Theme name or full @theme block }}
+SLIDE_RATIO:  {{ 16:9 (default) or 4:3 }}
 ```
-
----
 
 #### SL Prompt
 
 ```
 ## ROLE
-You are a presentation designer producing a clean MARP markdown slide deck.
-This deck will be exported directly to PDF — no live presentation,
-no speaker notes. Every design decision should serve readability in PDF form.
+You are a presentation designer producing a MARP markdown slide deck
+for PDF export. Every decision serves readability as a static PDF.
+Extract and compress — do not reproduce. The DOCX carries the prose.
 
 ## INPUT
-{{ PASTE MARP SLIDES INPUT }}
+{{ PASTE SL INPUT }}
+
+## CONDENSATION RULES
+- MAIN POINT → headline bullet (≤ 10 words)
+- TALKING POINTS → distil to 2–3 bullets max (≤ 12 words each)
+- ANCHOR ANALOGY → 3 bullets: the analogy · the connection · the limit
+- WORKED EXAMPLE → Before / After, one line each, no explanation
+- INSIGHT BLOCK → 5 bullets, Takeaways only (no Watch Outs on slides)
+- CALL TO ACTION → 2 lines: the action · one line of motivation
 
 ## OUTPUT FORMAT
-Output only valid MARP markdown. No prose outside the MARP structure.
-
-Start with the frontmatter block:
+Output only valid MARP markdown.
 
 ---
 marp: true
@@ -614,194 +372,64 @@ paginate: true
 size: {{ SLIDE_RATIO }}
 ---
 
-Then produce slides in this exact sequence:
-
-SLIDE 1 — TITLE SLIDE
+SLIDE 1 — TITLE
   # [Volume N] · [Part N.N]: [Part Title]
   ## [Series Title]
-  One-line descriptor (from Core Concept, first sentence)
+  [Core Concept, first sentence, ≤ 12 words]
 
 SLIDE 2 — WHAT YOU'LL LEARN
   ## What You'll Learn
-  The 5 Takeaways from Insight Block as bullet points
-  (rewrite as "You'll be able to…" statements for this slide)
+  5 bullets — "You'll be able to…" (≤ 12 words each)
 
-SLIDES 3 to N — ONE SLIDE PER ITEM in the finalised Slide-by-Slide Breakdown
-  Use the Section 3 headings as slide titles — not Section 0 if they diverged.
-  Format per slide:
-  ## [Slide Title]
-  - [Talking point 1]
-  - [Talking point 2]
-  - [Talking point 3]
-  (max 5 bullets, max 12 words per bullet)
-  <!-- [VISUAL: description from Visual Suggestion] -->
+SLIDES 3–N — ONE SLIDE PER ITEM in Section 3
+  ## [Slide Title from Section 3]
+  - [MAIN POINT ≤ 10 words]
+  - [Distilled talking point ≤ 12 words]
+  - [Distilled talking point ≤ 12 words]
+  <!-- [VISUAL: description] -->
 
 SLIDE N+1 — ANCHOR ANALOGY
   ## [Analogy Name]
-  Present the analogy as 3–5 short bullets or a two-column layout
-  that makes the comparison scannable.
+  - [The analogy — ≤ 12 words]
+  - [Connection to concept — ≤ 12 words]
+  - [Limit of analogy — ≤ 12 words, omit if not useful]
 
 SLIDE N+2 — WORKED EXAMPLE
   ## In Practice
-  Split into two visible blocks:
-  Left or top block labelled "Before" — the weak version
-  Right or bottom block labelled "After" — the improved version
-  Use a fenced code block if the example contains prompt text.
+  **Before:** [one line]
+  **After:**  [one line]
 
 SLIDE N+3 — INSIGHT BLOCK
   ## What You Now Know
-  5 bullets — one per Takeaway from Insight Block
-  Sub-bullet for each: Watch Out → one-line correct approach
+  5 Takeaway bullets only (≤ 12 words each)
 
-SLIDE N+4 — CTA SLIDE
+SLIDE N+4 — CTA
   ## Your Next Step
-  The CTA in 2–3 short lines, large and uncluttered.
-  Series title, volume number, and part number as a small sub-line at bottom.
+  [Action — ≤ 12 words]
+  [Motivation — ≤ 12 words]
+  [Series · Volume · Part]
 
 ## RULES
-- Maximum 5 bullets per slide body.
-- Maximum 12 words per bullet.
-- No prose paragraphs on any slide — bullets or short phrases only.
-- No speaker notes — this is a PDF-export deck.
-- Prompt text or code examples must use fenced code blocks
-  with a language identifier (e.g. ```text or ```python).
-- Visual suggestions go in HTML comments: <!-- [VISUAL: ...] -->
-  They are placeholders only — do not render as slide content.
-- Do not output any text outside the MARP markdown structure.
-- Use Section 3 headings as slide titles. If Section 0 and Section 3
-  diverged and were reconciled in MD, Section 3 is the source of truth.
-- Match TONE USED from the MD output header.
-
-## CROSS-FORMAT CONSISTENCY (check before marking output complete)
-□ Core concept on Slide 2 matches the DOCX intro paragraph phrasing
-□ CTA intent on final slide matches the DOCX CTA page
-□ Anchor Analogy uses the same name and framing as the DOCX handout
-
-## SELF-CHECK (append verbatim)
-□ Valid MARP frontmatter — correct theme name applied
-□ Title slide includes volume number and part number
-□ Slide count matches the number of items in MD Section 3 (finalised breakdown)
-□ No slide has more than 5 bullets
-□ No bullet exceeds 12 words
-□ No prose paragraphs on any slide
-□ Worked Example slide has visible Before/After blocks
-□ Code/prompt examples use fenced code blocks with language identifier
-□ No speaker notes present
-□ File exports to PDF without error via MARP CLI or VS Code
-□ Cross-format consistency gate passed (see above)
-□ TONE matches TONE USED from MD header
+- Max 3 bullets per content slide (Slides 3–N)
+- Max 12 words per bullet anywhere in the deck
+- No prose paragraphs on any slide
+- No speaker notes
+- Prompt/code examples → fenced code blocks with language identifier
+- Visual suggestions → HTML comments only
+- Watch Out content must not appear on slides
+- Section 3 headings are the source of truth for slide titles
+- Match TONE USED from part draft header
 ```
 
 ---
 
-### TP — Title & Description Pack
+## Golden Rule
 
-**Run this after the MD is fully approved, or directly from the
-CP Handoff Block when using the short-form path.**
-
-```
-## ROLE
-You are a content strategist and SEO copywriter producing platform-
-optimised titles, descriptions, and copy for every distribution channel.
-
-## INPUT
-{{ PASTE COMPLETED MD — or CP Handoff Block if short-form path }}
-
-## OUTPUT FORMAT
-Output all five blocks below, clearly labelled.
-
---- YOUTUBE / REEL TITLE ---
-[Max 60 characters. Lead with benefit or problem solved.
-Include volume and part number. No clickbait that doesn't deliver.]
-
---- LINKEDIN POST ---
-[150–200 words.
-Structure: bold hook line → 3–5 value bullets → bridge sentence → CTA.
-2–3 relevant hashtags max. Line break between every 1–2 sentences.]
-
---- INSTAGRAM CAPTION ---
-[80–120 words. Conversational, first-person.
-Hook must land in the first 125 characters (before "more" cutoff).
-End with a question to drive comments.]
-HASHTAGS: [20–25 tags — mix of niche, mid-range, and broad reach]
-
---- SEO META DESCRIPTION ---
-[Max 155 characters. Primary keyword placed naturally.
-Describe what the reader learns. End with a soft CTA verb.]
-
---- DOCUMENT / SLIDE COVER TITLE ---
-[Max 8 words. Used on the DOCX cover page and MARP title slide.
-Benefit-led. Must match the Part title from the planner.]
-
---- POSITIONING FLAG ---
-[yes / no]
-[If yes: note in one sentence what the title-writing process revealed
-about positioning that differs from the CP framing. Record this in
-SERIES_NOTES.md alongside the CP output and review it at the start
-of the next CP run before filling TOPIC_OR_WORKING_TITLE.
-Do not patch the current course mid-run.]
-
-## RULES
-- YouTube title: no ALL CAPS, no emoji, lead with keyword.
-- Instagram: first 125 characters must work as a standalone sentence.
-- Never duplicate the same sentence verbatim across platforms.
-- Match TONE from MD TONE USED header (or confirmed TONE in CP Handoff
-  Block if running the short-form path).
-
-## SELF-CHECK (append verbatim)
-□ YouTube title ≤ 60 characters, includes part reference
-□ LinkedIn post 150–200 words with correct structure
-□ Instagram hook works as standalone in first 125 characters
-□ Instagram has 20–25 hashtags
-□ Meta description ≤ 155 characters
-□ Document/slide cover title ≤ 8 words
-□ No copy duplicated verbatim across platforms
-□ Positioning Flag completed
-□ If Positioning Flag is yes: recorded in SERIES_NOTES.md instruction
-  included in output
-```
+> **Fix problems upstream, not downstream.**
+> If HO and SL share the same issue, fix the part draft — not the format outputs.
+> If multiple parts share the same issue, fix the MD volume run — not individual parts.
 
 ---
 
-## Revision Loop
-
-| Problem | Where to fix |
-|---|---|
-| Output is too generic | Enrich MD — add concrete examples to Sections 4 and 5. Never fix generic outputs in the format prompt. |
-| Wrong tone | Add 2–3 phrasing examples to the MD TONE field: "Write like this: [example]. Not like this: [bad example]." |
-| Tone is right for some parts but not others | Override TONE in the Per-Part Fields of MD. The CP Handoff Block default still applies to all other parts. |
-| DOCX structure is off | Re-run HO with a correction block: "REMINDER: [violated rule]. Fix this section: [paste bad output]." |
-| MARP bullets too long | Append to SL: "REMINDER: max 12 words per bullet. Rewrite all bullets exceeding this limit." |
-| Inconsistency across DOCX and slides | Lock MD first. Inconsistency almost always means MD was not finalised before format runs began. |
-| Volume scope is too broad | Edit the CP output directly before running any MD. Split into two volumes and flag in Review Flags. |
-| Part count per volume is too high | Merge two parts or move one to the next volume. Edit CP — never patch in MD. |
-| CP suggested wrong parts | Edit the CP output before running any MD. Never patch downstream. |
-| TP surfaces a better positioning angle | Note it in the Positioning Flag. Record in SERIES_NOTES.md. Bring it back to CP for the next course — do not patch the current course mid-run. |
-| MD repeated content from another part in the volume | Check VOLUME_PARTS is correct and PART_NUMBER is accurate. Re-run MD with a correction block if needed. |
-| MD pre-taught a later part's content | Append to MD: "REMINDER: do not reveal content from parts after [PART_NUMBER]. Rewrite [section] without it." |
-| Planned Slides in Section 0 don't match Section 3 headings | Reconcile Section 0 to match the finalised Section 3 breakdown before running any format. Do not fix in HO or SL separately. |
-| TP output is generic on the short-form path | Enrich CORE_PROBLEM and TARGET_AUDIENCE in the CP Handoff Block and re-run TP. Do not patch the TP prompt. |
-
-> **Golden Rule:** Fix problems upstream, not downstream. If both formats share
-> the same issue, the fix belongs in MD — not in HO and SL
-> separately. If multiple parts share the same issue, the fix belongs in the
-> CP output — not in individual MD runs.
-
----
-
-## Cross-Format Consistency Gate
-
-Before distributing any format, confirm all three. These checks are also
-embedded in the HO and SL Self-Checks — do not skip them at format stage.
-
-1. **Core concept** — stated the same way in the DOCX intro and on MARP Slide 2
-2. **CTA** — identical in intent on the DOCX CTA page and MARP final slide
-3. **Anchor Analogy** — same name and framing in both formats
-
-If any of these diverge, return to MD before publishing.
-
----
-
-*Content Generation Ecosystem · v5.4 · Updated May 2026*
-*Active formats: HO (DOCX) · SL (MARP) · TP (Title Pack)*
-*HTML Tutorial and Carousel prompts deferred — restore in v6.0 when ready*
+*Content Generation Ecosystem · v6.0 · Simplified May 2026*
+*Active formats: HO (DOCX, detailed) · SL (MARP, condensed)*
