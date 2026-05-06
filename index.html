@@ -1,0 +1,1493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Content Ecosystem — v4.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blue: #2563eb;
+    --blue-dim: #1d4ed8;
+    --blue-pale: #eff6ff;
+    --blue-border: #bfdbfe;
+    --text: #111827;
+    --text-2: #6b7280;
+    --text-3: #9ca3af;
+    --border: #e5e7eb;
+    --border-2: #d1d5db;
+    --surface: #ffffff;
+    --surface-2: #f9fafb;
+    --surface-3: #f3f4f6;
+    --green: #16a34a;
+    --green-pale: #f0fdf4;
+    --green-border: #bbf7d0;
+    --amber: #d97706;
+    --amber-pale: #fffbeb;
+    --amber-border: #fde68a;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+    --radius: 6px;
+    --radius-lg: 10px;
+  }
+
+  body {
+    font-family: var(--sans);
+    font-size: 14px;
+    color: var(--text);
+    background: var(--surface-2);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* ── LAYOUT ── */
+  .app {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    grid-template-rows: 52px 1fr;
+    min-height: 100vh;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    grid-column: 1 / -1;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-logo {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--blue);
+    letter-spacing: -0.01em;
+  }
+  .topbar-sep { color: var(--border-2); font-size: 18px; user-select: none; }
+  .topbar-title {
+    font-size: 13px;
+    color: var(--text-2);
+    font-weight: 400;
+  }
+  .topbar-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+  .topbar-badge {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--text-3);
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 16px 0;
+    overflow-y: auto;
+    position: sticky;
+    top: 52px;
+    height: calc(100vh - 52px);
+  }
+  .sidebar-section {
+    padding: 0 12px;
+    margin-bottom: 4px;
+  }
+  .sidebar-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--text-3);
+    text-transform: uppercase;
+    padding: 8px 8px 4px;
+    display: block;
+  }
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background 0.12s;
+    font-size: 13px;
+    color: var(--text-2);
+    user-select: none;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+  }
+  .sidebar-item:hover { background: var(--surface-3); color: var(--text); }
+  .sidebar-item.active {
+    background: var(--blue-pale);
+    color: var(--blue);
+    font-weight: 500;
+  }
+  .sidebar-item.active .stage-dot { background: var(--blue); }
+  .stage-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--border-2);
+    flex-shrink: 0;
+  }
+  .stage-dot.done { background: var(--green); }
+  .sidebar-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 10px 20px;
+  }
+
+  /* ── MAIN ── */
+  .main {
+    padding: 28px 32px;
+    max-width: 900px;
+    overflow-y: auto;
+  }
+
+  /* ── PANELS ── */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 12px;
+    font-family: var(--mono);
+    letter-spacing: 0.06em;
+    color: var(--text-3);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  /* ── PAGE HEADER ── */
+  .page-header { margin-bottom: 24px; }
+  .page-header h1 {
+    font-size: 20px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+  .page-header p {
+    font-size: 13px;
+    color: var(--text-2);
+  }
+  .stage-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--text-2);
+    margin-bottom: 10px;
+  }
+
+  /* ── INPUT FIELDS ── */
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 5px;
+  }
+  .field label .optional {
+    font-weight: 400;
+    color: var(--text-3);
+    margin-left: 4px;
+    font-size: 11px;
+  }
+  .field input,
+  .field textarea,
+  .field select {
+    width: 100%;
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border-2);
+    border-radius: var(--radius);
+    padding: 8px 10px;
+    outline: none;
+    transition: border-color 0.12s;
+    resize: vertical;
+  }
+  .field input:focus,
+  .field textarea:focus,
+  .field select:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
+  }
+  .field textarea { min-height: 80px; }
+  .field .hint {
+    font-size: 11px;
+    color: var(--text-3);
+    margin-top: 4px;
+  }
+
+  /* ── PROMPT BLOCK ── */
+  .prompt-block {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .prompt-block-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .prompt-block-title {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .prompt-block-body {
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.75;
+    padding: 16px;
+    color: var(--text-2);
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 520px;
+    overflow-y: auto;
+  }
+  .prompt-highlight { color: var(--blue); font-weight: 500; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.12s;
+    border: 1px solid transparent;
+  }
+  .btn-primary {
+    background: var(--blue);
+    color: #fff;
+    border-color: var(--blue);
+  }
+  .btn-primary:hover { background: var(--blue-dim); border-color: var(--blue-dim); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-2);
+    border-color: var(--border-2);
+  }
+  .btn-ghost:hover { background: var(--surface-3); color: var(--text); }
+  .btn-copy {
+    background: transparent;
+    color: var(--text-2);
+    border-color: var(--border);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 5px 10px;
+  }
+  .btn-copy:hover { background: var(--surface-3); color: var(--text); border-color: var(--border-2); }
+  .btn-copy.copied {
+    color: var(--green);
+    border-color: var(--green-border);
+    background: var(--green-pale);
+  }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+  /* ── ALERT BOXES ── */
+  .alert {
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    margin-bottom: 14px;
+    border-left: 3px solid;
+  }
+  .alert-blue {
+    background: var(--blue-pale);
+    border-color: var(--blue);
+    color: #1e40af;
+  }
+  .alert-amber {
+    background: var(--amber-pale);
+    border-color: var(--amber);
+    color: #92400e;
+  }
+  .alert-green {
+    background: var(--green-pale);
+    border-color: var(--green);
+    color: #14532d;
+  }
+
+  /* ── FLOW OVERVIEW ── */
+  .flow-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .flow-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .flow-card:hover {
+    border-color: var(--blue-border);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.06);
+  }
+  .flow-card.has-data { border-color: var(--green-border); }
+  .flow-card-stage {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .flow-card-title {
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .flow-card-desc { font-size: 12px; color: var(--text-2); }
+  .flow-card-status {
+    margin-top: 10px;
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--text-3);
+  }
+  .flow-card-status.done { color: var(--green); }
+
+  .format-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .format-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .format-card:hover {
+    border-color: var(--blue-border);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.06);
+  }
+  .format-card-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--blue);
+    margin-bottom: 4px;
+  }
+  .format-card-name { font-size: 13px; font-weight: 500; }
+  .format-card-desc { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+
+  /* ── SECTIONS WITHIN PROMPT ── */
+  .prompt-section { margin-bottom: 10px; }
+
+  /* ── GRID ROW ── */
+  .row { display: flex; gap: 12px; }
+  .row .field { flex: 1; }
+
+  /* ── SAVE NOTICE ── */
+  .save-notice {
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--text-3);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .save-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--green);
+  }
+
+  @media (max-width: 700px) {
+    .app { grid-template-columns: 1fr; grid-template-rows: 52px auto 1fr; }
+    .sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+    .main { padding: 16px; }
+    .flow-grid { grid-template-columns: 1fr 1fr; }
+    .format-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <span class="topbar-logo">CGE</span>
+    <span class="topbar-sep">/</span>
+    <span class="topbar-title">Content Generation Ecosystem</span>
+    <div class="topbar-actions">
+      <span class="save-notice"><span class="save-dot"></span> auto-saved</span>
+      <span class="topbar-badge">v4.0</span>
+      <button class="btn btn-ghost btn-sm" onclick="clearAll()">Clear all</button>
+    </div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <span class="sidebar-label">Overview</span>
+      <button class="sidebar-item active" onclick="nav('home')" id="nav-home">
+        <span class="stage-dot" id="dot-home"></span> Home
+      </button>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Stages</span>
+      <button class="sidebar-item" onclick="nav('pp')" id="nav-pp">
+        <span class="stage-dot" id="dot-pp"></span> Stage 0 — Course Planner
+      </button>
+      <button class="sidebar-item" onclick="nav('p0')" id="nav-p0">
+        <span class="stage-dot" id="dot-p0"></span> Stage 1 — Master Draft
+      </button>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Format Prompts</span>
+      <button class="sidebar-item" onclick="nav('pa')" id="nav-pa">
+        <span class="stage-dot" id="dot-pa"></span> PA — DOCX Handout
+      </button>
+      <button class="sidebar-item" onclick="nav('pb')" id="nav-pb">
+        <span class="stage-dot" id="dot-pb"></span> PB — MARP Slides
+      </button>
+      <button class="sidebar-item" onclick="nav('pe')" id="nav-pe">
+        <span class="stage-dot" id="dot-pe"></span> PE — Title Pack
+      </button>
+    </div>
+    <hr class="sidebar-divider">
+    <div class="sidebar-section">
+      <span class="sidebar-label">Reference</span>
+      <button class="sidebar-item" onclick="nav('guide')" id="nav-guide">
+        <span class="stage-dot"></span> Format Guide
+      </button>
+      <button class="sidebar-item" onclick="nav('loop')" id="nav-loop">
+        <span class="stage-dot"></span> Revision Loop
+      </button>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <!-- HOME -->
+    <div class="panel active" id="panel-home">
+      <div class="page-header">
+        <h1>Content Generation Ecosystem</h1>
+        <p>One source of truth. Four stages. All formats from a single draft.</p>
+      </div>
+
+      <div class="alert alert-blue">
+        Fill in your <strong>topic</strong> and fields in Stage 0, then work stage by stage. Each stage pre-fills data from the previous one — you only input each idea once.
+      </div>
+
+      <div class="card">
+        <div class="card-title">Quick Start — Topic</div>
+        <div class="field">
+          <label>Course topic or working title</label>
+          <input type="text" id="global-topic" placeholder="e.g. Prompt Engineering 101" oninput="saveField('global-topic')">
+          <div class="hint">This fills into every stage automatically.</div>
+        </div>
+        <div class="field">
+          <label>Target audience <span class="optional">optional</span></label>
+          <input type="text" id="global-audience" placeholder="e.g. Non-technical professionals using AI daily" oninput="saveField('global-audience')">
+        </div>
+        <div style="display:flex; gap:8px; margin-top:4px;">
+          <button class="btn btn-primary" onclick="nav('pp')">Start with Course Planner →</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Process Flow</div>
+        <div class="flow-grid">
+          <div class="flow-card" onclick="nav('pp')" id="flow-pp">
+            <div class="flow-card-stage">Stage 0</div>
+            <div class="flow-card-title">Course Planner</div>
+            <div class="flow-card-desc">Scope the course. 3–5 parts. Run once.</div>
+            <div class="flow-card-status" id="fstatus-pp">— not started</div>
+          </div>
+          <div class="flow-card" onclick="nav('p0')" id="flow-p0">
+            <div class="flow-card-stage">Stage 1</div>
+            <div class="flow-card-title">Master Draft</div>
+            <div class="flow-card-desc">Single source of truth per part.</div>
+            <div class="flow-card-status" id="fstatus-p0">— not started</div>
+          </div>
+          <div class="flow-card" onclick="nav('pa')" id="flow-pa">
+            <div class="flow-card-stage">Format — PA</div>
+            <div class="flow-card-title">DOCX Handout</div>
+            <div class="flow-card-desc">Word doc → PDF lead magnet.</div>
+            <div class="flow-card-status" id="fstatus-pa">— not started</div>
+          </div>
+          <div class="flow-card" onclick="nav('pe')" id="flow-pe">
+            <div class="flow-card-stage">Format — PE</div>
+            <div class="flow-card-title">Title Pack</div>
+            <div class="flow-card-desc">Titles, descriptions, hashtags.</div>
+            <div class="flow-card-status" id="fstatus-pe">— not started</div>
+          </div>
+        </div>
+        <div class="format-grid">
+          <div class="format-card" onclick="nav('pb')">
+            <div class="format-card-label">PB</div>
+            <div class="format-card-name">MARP Slides</div>
+            <div class="format-card-desc">.md → PDF slide deck</div>
+          </div>
+          <div class="format-card" onclick="nav('pe')">
+            <div class="format-card-label">PE</div>
+            <div class="format-card-name">Short-form path</div>
+            <div class="format-card-desc">Skip P0/PA/PB for explainers</div>
+          </div>
+          <div class="format-card" onclick="nav('guide')">
+            <div class="format-card-label">→</div>
+            <div class="format-card-name">Format Guide</div>
+            <div class="format-card-desc">Which stages to run for your part type</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STAGE 0: COURSE PLANNER (PP) -->
+    <div class="panel" id="panel-pp">
+      <div class="page-header">
+        <div class="stage-badge">Stage 0</div>
+        <h1>Course Planner (PP)</h1>
+        <p>Run once per course. Review and edit the output before proceeding to Stage 1.</p>
+      </div>
+
+      <div class="alert alert-amber">
+        <strong>Golden Rule:</strong> Review and edit the PP output before running any Master Draft. The planner decides structure once — honour it downstream.
+      </div>
+
+      <div class="card">
+        <div class="card-title">Required Fields</div>
+        <div class="field">
+          <label>Topic or working title</label>
+          <input type="text" id="pp-topic" placeholder="e.g. Prompt Engineering 101" oninput="saveField('pp-topic')">
+        </div>
+        <div class="field">
+          <label>Target outcome</label>
+          <textarea id="pp-outcome" placeholder="What should someone be able to DO after completing this course?&#10;e.g. Write prompts that consistently produce usable AI outputs" oninput="saveField('pp-outcome')"></textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Optional Fields</div>
+        <div class="field">
+          <label>Rough ideas <span class="optional">optional</span></label>
+          <textarea id="pp-ideas" placeholder="Dump any subtopics, angles, or ideas you already have. Leave blank if starting cold." oninput="saveField('pp-ideas')"></textarea>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>Target audience <span class="optional">optional</span></label>
+            <input type="text" id="pp-audience" placeholder="Who is this for?" oninput="saveField('pp-audience')">
+          </div>
+          <div class="field">
+            <label>Assumed knowledge <span class="optional">optional</span></label>
+            <input type="text" id="pp-knowledge" placeholder="What do they already know?" oninput="saveField('pp-knowledge')">
+          </div>
+        </div>
+        <div class="field">
+          <label>Positioning angle <span class="optional">optional</span></label>
+          <input type="text" id="pp-angle" placeholder="e.g. practical-only, zero theory" oninput="saveField('pp-angle')">
+        </div>
+        <div class="field">
+          <label>Things to avoid <span class="optional">optional</span></label>
+          <input type="text" id="pp-avoid" placeholder="e.g. no academic language, avoid jargon-heavy framing" oninput="saveField('pp-avoid')">
+        </div>
+      </div>
+
+      <div class="prompt-block">
+        <div class="prompt-block-header">
+          <span class="prompt-block-title">PP Prompt — ready to copy</span>
+          <button class="btn btn-copy" onclick="copyPrompt('pp-prompt', this)">Copy</button>
+        </div>
+        <div class="prompt-block-body" id="pp-prompt"></div>
+      </div>
+
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-primary" onclick="markDone('pp'); nav('p0')">Mark done & go to Master Draft →</button>
+      </div>
+    </div>
+
+    <!-- STAGE 1: MASTER DRAFT (P0) -->
+    <div class="panel" id="panel-p0">
+      <div class="page-header">
+        <div class="stage-badge">Stage 1</div>
+        <h1>Master Draft (P0)</h1>
+        <p>The single source of truth. Do not run format prompts without a completed, reviewed Master Draft.</p>
+      </div>
+
+      <div class="alert alert-blue">
+        Fields marked <strong>↑ from PP</strong> auto-fill from Stage 0. Confirm they're correct before adding per-part fields.
+      </div>
+
+      <div class="card">
+        <div class="card-title">From Course Planner</div>
+        <div class="field">
+          <label>Course series <span class="optional">↑ from PP</span></label>
+          <input type="text" id="p0-course" placeholder="Course title from planner" oninput="saveField('p0-course')">
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>Target audience <span class="optional">↑ from PP</span></label>
+            <input type="text" id="p0-audience" placeholder="Audience from planner" oninput="saveField('p0-audience')">
+          </div>
+          <div class="field">
+            <label>Assumed knowledge <span class="optional">↑ from PP</span></label>
+            <input type="text" id="p0-knowledge" placeholder="Assumed knowledge from planner" oninput="saveField('p0-knowledge')">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Per-Part Fields</div>
+        <div class="row">
+          <div class="field">
+            <label>Part number</label>
+            <input type="text" id="p0-partnum" placeholder="e.g. Part 2" oninput="saveField('p0-partnum')">
+          </div>
+          <div class="field">
+            <label>Part title</label>
+            <input type="text" id="p0-parttitle" placeholder="e.g. The Four-Part Prompt Formula" oninput="saveField('p0-parttitle')">
+          </div>
+        </div>
+        <div class="field">
+          <label>Tone</label>
+          <input type="text" id="p0-tone" placeholder="e.g. direct, practical, zero fluff — sharp senior explaining to a junior" oninput="saveField('p0-tone')">
+        </div>
+        <div class="field">
+          <label>Key slides from outline</label>
+          <textarea id="p0-slides" placeholder="Bullet points or slide titles for this part" oninput="saveField('p0-slides')"></textarea>
+        </div>
+        <div class="field">
+          <label>Primary takeaway</label>
+          <textarea id="p0-takeaway" placeholder="The single most important thing the learner walks away knowing" oninput="saveField('p0-takeaway')"></textarea>
+        </div>
+        <div class="field">
+          <label>CTA</label>
+          <input type="text" id="p0-cta" placeholder="The specific action for this part — one sentence" oninput="saveField('p0-cta')">
+        </div>
+        <div class="field">
+          <label>Examples or analogies <span class="optional">optional</span></label>
+          <textarea id="p0-examples" placeholder="Any examples you already have — leave blank otherwise" oninput="saveField('p0-examples')"></textarea>
+        </div>
+        <div class="field">
+          <label>Things to avoid <span class="optional">optional</span></label>
+          <input type="text" id="p0-avoid" placeholder="Words, tones, or framings to exclude for this part" oninput="saveField('p0-avoid')">
+        </div>
+      </div>
+
+      <div class="prompt-block">
+        <div class="prompt-block-header">
+          <span class="prompt-block-title">P0 Prompt — ready to copy</span>
+          <button class="btn btn-copy" onclick="copyPrompt('p0-prompt', this)">Copy</button>
+        </div>
+        <div class="prompt-block-body" id="p0-prompt"></div>
+      </div>
+
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-primary" onclick="markDone('p0'); nav('pa')">Mark done & go to formats →</button>
+      </div>
+    </div>
+
+    <!-- PA — DOCX HANDOUT -->
+    <div class="panel" id="panel-pa">
+      <div class="page-header">
+        <div class="stage-badge">Format — PA</div>
+        <h1>DOCX Handout Generator</h1>
+        <p>Produces a Word document (.docx) converted to PDF for distribution as a lead magnet.</p>
+      </div>
+
+      <div class="alert alert-blue">
+        Paste your completed and approved Master Draft into the input below, then copy the PA Prompt.
+      </div>
+
+      <div class="card">
+        <div class="card-title">PA Input</div>
+        <div class="field">
+          <label>Master Draft <span class="optional">paste from P0 output</span></label>
+          <textarea id="pa-draft" placeholder="Paste your completed Master Draft here..." style="min-height:120px;" oninput="saveField('pa-draft')"></textarea>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>Page size</label>
+            <select id="pa-pagesize" onchange="saveField('pa-pagesize')">
+              <option value="A4">A4</option>
+              <option value="US Letter">US Letter</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Brand accent color <span class="optional">optional</span></label>
+            <input type="text" id="pa-color" placeholder="#2563eb" oninput="saveField('pa-color')">
+          </div>
+        </div>
+      </div>
+
+      <div class="prompt-block">
+        <div class="prompt-block-header">
+          <span class="prompt-block-title">PA Prompt — ready to copy</span>
+          <button class="btn btn-copy" onclick="copyPrompt('pa-prompt', this)">Copy</button>
+        </div>
+        <div class="prompt-block-body" id="pa-prompt"></div>
+      </div>
+
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-primary" onclick="markDone('pa'); nav('pb')">Mark done & go to PB →</button>
+      </div>
+    </div>
+
+    <!-- PB — MARP SLIDES -->
+    <div class="panel" id="panel-pb">
+      <div class="page-header">
+        <div class="stage-badge">Format — PB</div>
+        <h1>MARP Slides Generator</h1>
+        <p>Outputs a .md MARP file exported to PDF. Clean static slides optimised for PDF readability.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">PB Input</div>
+        <div class="field">
+          <label>Master Draft <span class="optional">paste from P0 output</span></label>
+          <textarea id="pb-draft" placeholder="Paste your completed Master Draft here..." style="min-height:120px;" oninput="saveField('pb-draft')"></textarea>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>MARP theme</label>
+            <input type="text" id="pb-theme" placeholder="e.g. theme: my-theme" oninput="saveField('pb-theme')">
+          </div>
+          <div class="field">
+            <label>Slide ratio</label>
+            <select id="pb-ratio" onchange="saveField('pb-ratio')">
+              <option value="16:9">16:9 (default)</option>
+              <option value="4:3">4:3</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="prompt-block">
+        <div class="prompt-block-header">
+          <span class="prompt-block-title">PB Prompt — ready to copy</span>
+          <button class="btn btn-copy" onclick="copyPrompt('pb-prompt', this)">Copy</button>
+        </div>
+        <div class="prompt-block-body" id="pb-prompt"></div>
+      </div>
+
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-primary" onclick="markDone('pb'); nav('pe')">Mark done & go to PE →</button>
+      </div>
+    </div>
+
+    <!-- PE — TITLE PACK -->
+    <div class="panel" id="panel-pe">
+      <div class="page-header">
+        <div class="stage-badge">Format — PE</div>
+        <h1>Title &amp; Description Pack</h1>
+        <p>Always run this last. For short-form path, run directly from PP output — no P0 required.</p>
+      </div>
+
+      <div class="alert alert-green">
+        <strong>Short-form path:</strong> For standalone explainers or Substack essays that don't need slides or handouts — paste PP output directly here. Skip P0, PA, PB.
+      </div>
+
+      <div class="card">
+        <div class="card-title">PE Input</div>
+        <div class="field">
+          <label>Master Draft or PP output</label>
+          <textarea id="pe-draft" placeholder="Paste your completed Master Draft, or PP output if using short-form path..." style="min-height:120px;" oninput="saveField('pe-draft')"></textarea>
+        </div>
+      </div>
+
+      <div class="prompt-block">
+        <div class="prompt-block-header">
+          <span class="prompt-block-title">PE Prompt — ready to copy</span>
+          <button class="btn btn-copy" onclick="copyPrompt('pe-prompt', this)">Copy</button>
+        </div>
+        <div class="prompt-block-body" id="pe-prompt"></div>
+      </div>
+
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-primary" onclick="markDone('pe')">Mark done ✓</button>
+      </div>
+    </div>
+
+    <!-- FORMAT GUIDE -->
+    <div class="panel" id="panel-guide">
+      <div class="page-header">
+        <h1>Format Selection Guide</h1>
+        <p>Run this check before starting any part.</p>
+      </div>
+      <div class="card">
+        <table style="width:100%; border-collapse:collapse; font-size:13px;">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border);">
+              <th style="text-align:left; padding:8px 12px; color:var(--text-2); font-weight:500;">Part type</th>
+              <th style="text-align:left; padding:8px 12px; color:var(--text-2); font-weight:500;">Run</th>
+              <th style="text-align:left; padding:8px 12px; color:var(--text-2); font-weight:500;">Skip</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:10px 12px;">Full teaching unit — course handout + video</td>
+              <td style="padding:10px 12px; color:var(--green); font-family:var(--mono); font-size:12px;">P0 → PA · PB · PE</td>
+              <td style="padding:10px 12px; color:var(--text-3); font-family:var(--mono); font-size:12px;">—</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:10px 12px;">Full teaching unit — handout only</td>
+              <td style="padding:10px 12px; color:var(--green); font-family:var(--mono); font-size:12px;">P0 → PA · PE</td>
+              <td style="padding:10px 12px; color:var(--text-3); font-family:var(--mono); font-size:12px;">PB</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:10px 12px;">Full teaching unit — slides only</td>
+              <td style="padding:10px 12px; color:var(--green); font-family:var(--mono); font-size:12px;">P0 → PB · PE</td>
+              <td style="padding:10px 12px; color:var(--text-3); font-family:var(--mono); font-size:12px;">PA</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:10px 12px;">Short explainer / newsletter part</td>
+              <td style="padding:10px 12px; color:var(--green); font-family:var(--mono); font-size:12px;">PE only (short-form)</td>
+              <td style="padding:10px 12px; color:var(--text-3); font-family:var(--mono); font-size:12px;">P0 · PA · PB</td>
+            </tr>
+            <tr>
+              <td style="padding:10px 12px;">Blog / Substack only</td>
+              <td style="padding:10px 12px; color:var(--green); font-family:var(--mono); font-size:12px;">PE only</td>
+              <td style="padding:10px 12px; color:var(--text-3); font-family:var(--mono); font-size:12px;">P0 · PA · PB</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="alert alert-blue">
+        <strong>Always run PE</strong> regardless of path. Consistent naming across channels protects discoverability.
+      </div>
+    </div>
+
+    <!-- REVISION LOOP -->
+    <div class="panel" id="panel-loop">
+      <div class="page-header">
+        <h1>Revision Loop</h1>
+        <p>Fix problems upstream, not downstream.</p>
+      </div>
+      <div class="alert alert-amber">
+        <strong>Golden Rule:</strong> If both formats share the same issue, the fix belongs in the Master Draft — not in PA and PB separately.
+      </div>
+      <div class="card">
+        <table style="width:100%; border-collapse:collapse; font-size:13px;">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border);">
+              <th style="text-align:left; padding:8px 12px; color:var(--text-2); font-weight:500;">Problem</th>
+              <th style="text-align:left; padding:8px 12px; color:var(--text-2); font-weight:500;">Where to fix</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:10px 12px;">Output is too generic</td>
+              <td style="padding:10px 12px; color:var(--text-2);">Enrich P0 — add concrete examples to Sections 4 and 5. Never fix in the format prompt.</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:10px 12px;">Wrong tone</td>
+              <td style="padding:10px 12px; color:var(--text-2);">Add 2–3 phrasing examples to the P0 TONE field: "Write like this: [example]. Not like this: [bad example]."</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:10px 12px;">DOCX structure is off</td>
+              <td style="padding:10px 12px; color:var(--text-2);">Re-run PA with a correction block: "REMINDER: [violated rule]. Fix this section: [paste bad output]."</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:10px 12px;">MARP bullets too long</td>
+              <td style="padding:10px 12px; color:var(--text-2);">Append to PB: "REMINDER: max 12 words per bullet. Rewrite all bullets exceeding this limit."</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:10px 12px;">Inconsistency across DOCX and slides</td>
+              <td style="padding:10px 12px; color:var(--text-2);">Lock P0 first. Inconsistency almost always means P0 was not finalised before format runs began.</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:10px 12px;">Planner suggested wrong parts</td>
+              <td style="padding:10px 12px; color:var(--text-2);">Edit the PP output directly before running any Master Draft. Never patch downstream.</td>
+            </tr>
+            <tr>
+              <td style="padding:10px 12px;">PE surfaces a better positioning angle</td>
+              <td style="padding:10px 12px; color:var(--text-2);">Note it in the Positioning Flag. Bring it back to PP for the next course — do not patch the current course mid-run.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────────────
+const FIELDS = [
+  'global-topic','global-audience',
+  'pp-topic','pp-outcome','pp-ideas','pp-audience','pp-knowledge','pp-angle','pp-avoid',
+  'p0-course','p0-audience','p0-knowledge','p0-partnum','p0-parttitle','p0-tone',
+  'p0-slides','p0-takeaway','p0-cta','p0-examples','p0-avoid',
+  'pa-draft','pa-pagesize','pa-color',
+  'pb-draft','pb-theme','pb-ratio',
+  'pe-draft'
+];
+const DONE = ['pp','p0','pa','pb','pe'];
+
+function saveField(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  localStorage.setItem('cge_' + id, el.value);
+  renderAllPrompts();
+  syncRelated(id);
+}
+
+function loadAll() {
+  FIELDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const val = localStorage.getItem('cge_' + id);
+    if (val !== null) el.value = val;
+  });
+  DONE.forEach(s => {
+    if (localStorage.getItem('cge_done_' + s) === '1') markDoneUI(s);
+  });
+  renderAllPrompts();
+  updateFlowStatus();
+}
+
+function syncRelated(id) {
+  // Auto-populate p0 fields from pp
+  const map = {
+    'pp-topic': 'p0-course',
+    'pp-audience': 'p0-audience',
+    'global-audience': 'pp-audience',
+    'global-topic': 'pp-topic',
+    'pp-knowledge': 'p0-knowledge',
+  };
+  if (map[id]) {
+    const src = document.getElementById(id);
+    const dst = document.getElementById(map[id]);
+    if (src && dst && dst.value === '') {
+      dst.value = src.value;
+      localStorage.setItem('cge_' + map[id], dst.value);
+    }
+  }
+  // Also sync p0 draft to pa/pb
+  updateFlowStatus();
+}
+
+function f(id) {
+  const el = document.getElementById(id);
+  const v = el ? el.value.trim() : '';
+  return v || `[${id.replace(/-/g,' ')}]`;
+}
+function fRaw(id) {
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : '';
+}
+
+// ── PROMPT RENDERERS ──────────────────────────────────────────────────
+function renderPP() {
+  const topic = f('pp-topic');
+  const outcome = f('pp-outcome');
+  const ideas = fRaw('pp-ideas') || '(leave blank)';
+  const audience = fRaw('pp-audience') || '(leave blank)';
+  const knowledge = fRaw('pp-knowledge') || '(leave blank)';
+  const angle = fRaw('pp-angle') || '(leave blank)';
+  const avoid = fRaw('pp-avoid') || '(leave blank)';
+
+  return `## COURSE PLANNER INPUT
+
+# ── REQUIRED ──────────────────────────────────────────────────
+
+TOPIC_OR_WORKING_TITLE:
+  ${topic}
+
+TARGET_OUTCOME:
+  ${outcome}
+
+# ── OPTIONAL ──────────────────────────────────────────────────
+
+ROUGH_IDEAS:
+  ${ideas}
+
+TARGET_AUDIENCE:
+  ${audience}
+
+ASSUMED_KNOWLEDGE:
+  ${knowledge}
+
+POSITIONING_ANGLE:
+  ${angle}
+
+THINGS_TO_AVOID:
+  ${avoid}
+
+---
+
+## ROLE
+You are a curriculum architect and content strategist.
+Your job is to produce a minimal, focused course plan from a rough
+input — ready for a human to review, adjust, and approve before any
+content is produced.
+
+Minimal is the hard constraint: 3–5 parts maximum.
+Every part must earn its place. If two topics can be merged without
+losing clarity, merge them.
+
+## OUTPUT FORMAT
+Produce all sections below, in this exact order.
+
+### 1. COURSE IDENTITY
+TITLE:        [Final or working title — benefit-led, not topic-labelled]
+SUBTITLE:     [One sentence — what the course delivers for the learner]
+POSITIONING:  [1–2 sentences — what angle this takes and why it is
+               different from a generic course on this topic]
+
+### 2. AUDIENCE PROFILE
+TARGET_AUDIENCE:   [Specific — who this is for]
+ASSUMED_KNOWLEDGE: [What they know coming in]
+CORE_PROBLEM:      [The specific frustration this course solves]
+
+### 3. COURSE STRUCTURE
+For each part (3–5 total):
+
+  PART [N]: [Title — outcome-framed, not topic-labelled]
+  ONE-LINER: [What this part teaches — one sentence]
+  POSITION:  [Why this part belongs here — one sentence]
+  FORMAT:    [full | short-form]
+
+### 4. FLOW RATIONALE
+2–3 sentences on the logic of the part order.
+
+### 5. COURSE-LEVEL CTA
+The single action you want the learner to take after finishing.
+
+### 6. REVIEW NOTES
+Flag: parts merged, topics left out, assumptions made, short-form decisions.
+
+## RULES
+- 3–5 parts. Hard limit.
+- Part titles must be outcome-framed.
+- Stop at the plan. Do not produce Master Drafts or any content.
+
+## SELF-CHECK (append verbatim)
+□ 3–5 parts — no exceptions
+□ Every part has title, one-liner, position, and format flag
+□ Flow Rationale explains the part order logic
+□ Review Notes flag all assumptions and short-form decisions
+□ No content produced — plan only`;
+}
+
+function renderP0() {
+  const course = f('p0-course');
+  const audience = f('p0-audience');
+  const knowledge = f('p0-knowledge');
+  const partnum = f('p0-partnum');
+  const parttitle = f('p0-parttitle');
+  const tone = f('p0-tone');
+  const slides = f('p0-slides');
+  const takeaway = f('p0-takeaway');
+  const cta = f('p0-cta');
+  const examples = fRaw('p0-examples') || '(leave blank)';
+  const avoid = fRaw('p0-avoid') || '(leave blank)';
+
+  return `## MASTER DRAFT INPUT
+
+# ── FROM THE PLANNER ──────────────────────────────────────────
+
+COURSE_SERIES:     ${course}
+TARGET_AUDIENCE:   ${audience}
+ASSUMED_KNOWLEDGE: ${knowledge}
+
+# ── PER-PART FIELDS ───────────────────────────────────────────
+
+PART_NUMBER:  ${partnum}
+PART_TITLE:   ${parttitle}
+
+TONE:
+  ${tone}
+
+KEY_SLIDES_FROM_OUTLINE:
+  ${slides}
+
+PRIMARY_TAKEAWAY:
+  ${takeaway}
+
+CTA:
+  ${cta}
+
+EXAMPLES_OR_ANALOGIES:
+  ${examples}
+
+THINGS_TO_AVOID:
+  ${avoid}
+
+---
+
+## ROLE
+You are an expert instructional content writer and curriculum architect.
+Your job is to produce a definitive Master Content Draft from the input above.
+This draft is the single source of truth for all downstream formats.
+Write it with that responsibility in mind.
+Maintain TONE exactly throughout — no academic drift.
+
+## OUTPUT FORMAT
+
+### 1. CORE CONCEPT (2–3 sentences)
+The central idea of this part, stated plainly.
+No jargon unless immediately defined.
+Write it as if explaining to a smart 16-year-old.
+
+### 2. WHY THIS MATTERS (2–3 sentences)
+The stakes. What stays broken if the audience never learns this.
+
+### 3. SLIDE-BY-SLIDE BREAKDOWN
+For each item in KEY_SLIDES_FROM_OUTLINE:
+  SLIDE TITLE:
+  MAIN POINT:        [1 sentence]
+  TALKING POINTS:    [3–5 bullets, conversational not academic]
+  VISUAL SUGGESTION: [What should appear on screen]
+
+### 4. ANCHOR ANALOGY
+One strong real-world analogy. Name it clearly (e.g. "THE RECIPE ANALOGY").
+
+### 5. WORKED EXAMPLE
+A concrete before/after or step-by-step example.
+
+### 6. INSIGHT BLOCK (exactly 5 entries)
+  TAKEAWAY: "I now know that [statement]."
+  WATCH OUT: [Most common way people get this wrong — one sentence]
+
+### 7. CALL TO ACTION
+The CTA expanded into 2–3 sentences of motivation.
+
+## RULES
+- Do not invent information not implied by the input.
+- Match TONE exactly throughout — no academic drift.
+- If EXAMPLES_OR_ANALOGIES were provided, use them. Do not replace them.
+- Every section must be present. Do not skip or merge.
+- THINGS_TO_AVOID words must not appear anywhere in the draft.
+
+## SELF-CHECK (append verbatim)
+□ All 7 sections present and non-empty
+□ Core Concept ≤ 3 sentences
+□ Exactly 5 entries in Insight Block
+□ Anchor Analogy is named and labelled
+□ Worked Example requires no knowledge beyond ASSUMED_KNOWLEDGE
+□ Tone matches input — zero academic drift
+□ THINGS_TO_AVOID words do not appear`;
+}
+
+function renderPA() {
+  const draft = fRaw('pa-draft') || '[PASTE COMPLETED MASTER DRAFT HERE]';
+  const pagesize = fRaw('pa-pagesize') || 'A4';
+  const color = fRaw('pa-color') || '#2563eb';
+
+  return `## DOCX HANDOUT INPUT
+
+MASTER_DRAFT:
+${draft}
+
+PAGE_SIZE:
+  ${pagesize}
+
+BRAND_ACCENT_COLOR:
+  ${color}
+
+---
+
+## ROLE
+You are a professional instructional designer producing a Word document
+(.docx) course handout using docx-js (Node.js).
+
+This document will be used as a course handout and converted to PDF
+for distribution. It must be clean, readable, and print-friendly.
+
+Structure content into broad chapters — group related slides together
+into coherent sections rather than making each slide a separate heading.
+Aim for 3–5 chapters maximum per part, regardless of slide count.
+
+## STEP 1 — DOCUMENT SPEC
+Before writing any code, output a Document Spec:
+
+CHAPTER LIST:
+  [List 3–5 chapter names and the slides each groups]
+
+CONTENT MAP:
+  For each chapter: name, intro paragraph source, body content type,
+  callout boxes needed, whether Worked Example appears here
+
+SPECIAL PAGES:
+  - What You'll Learn page: yes/no
+  - Key Takeaways page: yes/no
+  - CTA page: yes/no
+
+Output the spec, then pause with: "Spec complete. Proceeding to script."
+
+## STEP 2 — NODE.JS SCRIPT
+Produce a complete, runnable Node.js script using the docx npm package.
+The script must generate a file named:
+  [COURSE_SERIES]-Part[N]-Handout.docx
+
+## DOCUMENT STRUCTURE
+
+COVER PAGE → WHAT YOU'LL LEARN → MAIN BODY CHAPTERS →
+WORKED EXAMPLE CHAPTER → KEY TAKEAWAYS PAGE → CTA PAGE
+
+## DOCX-JS RULES
+- Install: npm install docx
+- Arial body font, size 24 (12pt)
+- Heading 1: Arial, size 32, bold
+- Heading 2: Arial, size 28, bold
+- Never use \\n inside TextRun — use separate Paragraph elements
+- Never use unicode bullet characters — use LevelFormat.BULLET
+- Page size ${pagesize}: A4 = { width: 11906, height: 16838 }
+- Tables: WidthType.DXA, ShadingType.CLEAR only
+- BRAND_ACCENT_COLOR: apply to Heading 1 and callout box borders. Strip #.
+
+## SELF-CHECK (append verbatim)
+□ Document Spec produced before script
+□ Script runs without error
+□ Cover page has course series, part number, and title
+□ Content grouped into 3–5 broad chapters
+□ All 5 Takeaways appear on the summary page
+□ Worked Example has visible Before/After blocks
+□ Warning callout boxes present for all Watch Out items
+□ CTA page is the final page`;
+}
+
+function renderPB() {
+  const draft = fRaw('pb-draft') || '[PASTE COMPLETED MASTER DRAFT HERE]';
+  const theme = fRaw('pb-theme') || 'theme: default';
+  const ratio = fRaw('pb-ratio') || '16:9';
+
+  return `## MARP SLIDES INPUT
+
+MASTER_DRAFT:
+${draft}
+
+MARP_THEME:
+  ${theme}
+
+SLIDE_RATIO:
+  ${ratio}
+
+---
+
+## ROLE
+You are a presentation designer producing a clean MARP markdown slide deck.
+This deck will be exported directly to PDF — no live presentation,
+no speaker notes. Every design decision should serve readability in PDF form.
+
+## OUTPUT FORMAT
+Output only valid MARP markdown. No prose outside the MARP structure.
+
+Start with the frontmatter block:
+
+---
+marp: true
+${theme}
+paginate: true
+size: ${ratio}
+---
+
+Then produce slides in this exact sequence:
+
+SLIDE 1 — TITLE SLIDE
+SLIDE 2 — WHAT YOU'LL LEARN (5 Takeaways as "You'll be able to…" bullets)
+SLIDES 3 to N — ONE SLIDE PER ITEM in Slide-by-Slide Breakdown
+  ## [Slide Title]
+  - [Talking point] (max 5 bullets, max 12 words per bullet)
+  <!-- [VISUAL: description] -->
+SLIDE N+1 — ANCHOR ANALOGY (3–5 short bullets or two-column layout)
+SLIDE N+2 — WORKED EXAMPLE (Before / After visible blocks)
+SLIDE N+3 — INSIGHT BLOCK (What You Now Know — 5 bullets + Watch Out sub-bullets)
+SLIDE N+4 — CTA SLIDE
+
+## RULES
+- Maximum 5 bullets per slide body.
+- Maximum 12 words per bullet.
+- No prose paragraphs on any slide.
+- No speaker notes.
+- Prompt text or code examples must use fenced code blocks.
+- Visual suggestions go in HTML comments: <!-- [VISUAL: ...] -->
+
+## SELF-CHECK (append verbatim)
+□ Valid MARP frontmatter — correct theme name applied
+□ No slide has more than 5 bullets
+□ No bullet exceeds 12 words
+□ No prose paragraphs on any slide
+□ Worked Example slide has visible Before/After blocks
+□ Code/prompt examples use fenced code blocks with language identifier
+□ No speaker notes present
+□ File exports to PDF without error via MARP CLI or VS Code`;
+}
+
+function renderPE() {
+  const draft = fRaw('pe-draft') || '[PASTE COMPLETED MASTER DRAFT OR PP OUTPUT HERE]';
+
+  return `## PE INPUT
+
+MASTER_DRAFT_OR_PP_OUTPUT:
+${draft}
+
+---
+
+## ROLE
+You are a content strategist and SEO copywriter producing platform-
+optimised titles, descriptions, and copy for every distribution channel.
+
+## OUTPUT FORMAT
+Output all five blocks below, clearly labelled.
+
+--- YOUTUBE / REEL TITLE ---
+[Max 60 characters. Lead with benefit or problem solved.
+Include part number. No clickbait that doesn't deliver.]
+
+--- LINKEDIN POST ---
+[150–200 words.
+Structure: bold hook line → 3–5 value bullets → bridge sentence → CTA.
+2–3 relevant hashtags max. Line break between every 1–2 sentences.]
+
+--- INSTAGRAM CAPTION ---
+[80–120 words. Conversational, first-person.
+Hook must land in the first 125 characters (before "more" cutoff).
+End with a question to drive comments.]
+HASHTAGS: [20–25 tags — mix of niche, mid-range, and broad reach]
+
+--- SEO META DESCRIPTION ---
+[Max 155 characters. Primary keyword placed naturally.
+Describe what the reader learns. End with a soft CTA verb.]
+
+--- DOCUMENT / SLIDE COVER TITLE ---
+[Max 8 words. Benefit-led. Must match the Part title from the planner.]
+
+--- POSITIONING FLAG ---
+[yes / no]
+[If yes: note in one sentence what the title-writing process revealed
+about positioning that differs from the PP framing.]
+
+## RULES
+- YouTube title: no ALL CAPS, no emoji, lead with keyword.
+- Instagram: first 125 characters must work as a standalone sentence.
+- Never duplicate the same sentence verbatim across platforms.
+- Match TONE from the Master Draft throughout.
+
+## SELF-CHECK (append verbatim)
+□ YouTube title ≤ 60 characters
+□ LinkedIn post 150–200 words with correct structure
+□ Instagram hook works as standalone in first 125 characters
+□ Instagram has 20–25 hashtags
+□ Meta description ≤ 155 characters
+□ Document/slide cover title ≤ 8 words
+□ No copy duplicated verbatim across platforms
+□ Positioning flag completed`;
+}
+
+function renderAllPrompts() {
+  const renders = {
+    'pp-prompt': renderPP,
+    'p0-prompt': renderP0,
+    'pa-prompt': renderPA,
+    'pb-prompt': renderPB,
+    'pe-prompt': renderPE,
+  };
+  Object.entries(renders).forEach(([id, fn]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = fn();
+  });
+}
+
+// ── NAV ──────────────────────────────────────────────────────────────
+function nav(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('active'));
+  const panel = document.getElementById('panel-' + id);
+  if (panel) panel.classList.add('active');
+  const btn = document.getElementById('nav-' + id);
+  if (btn) btn.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ── COPY ──────────────────────────────────────────────────────────────
+function copyPrompt(id, btn) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  navigator.clipboard.writeText(el.textContent).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = 'Copy';
+      btn.classList.remove('copied');
+    }, 1800);
+  });
+}
+
+// ── DONE ──────────────────────────────────────────────────────────────
+function markDone(stage) {
+  localStorage.setItem('cge_done_' + stage, '1');
+  markDoneUI(stage);
+  updateFlowStatus();
+}
+
+function markDoneUI(stage) {
+  const dot = document.getElementById('dot-' + stage);
+  if (dot) dot.classList.add('done');
+}
+
+function updateFlowStatus() {
+  const stages = ['pp', 'p0', 'pa', 'pe'];
+  stages.forEach(s => {
+    const el = document.getElementById('fstatus-' + s);
+    if (!el) return;
+    if (localStorage.getItem('cge_done_' + s) === '1') {
+      el.textContent = '✓ done';
+      el.classList.add('done');
+      const card = document.getElementById('flow-' + s);
+      if (card) card.classList.add('has-data');
+    }
+  });
+}
+
+// ── CLEAR ──────────────────────────────────────────────────────────────
+function clearAll() {
+  if (!confirm('Clear all saved data? This cannot be undone.')) return;
+  Object.keys(localStorage).forEach(k => {
+    if (k.startsWith('cge_')) localStorage.removeItem(k);
+  });
+  location.reload();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────
+loadAll();
+</script>
+</body>
+</html>
