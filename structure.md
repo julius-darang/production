@@ -1,23 +1,23 @@
-# Content Generation Ecosystem — v5.1
+# Content Generation Ecosystem — v5.3
 > Multi-Platform Content Processor · 4 Stages · 2 Active Formats · 1 Source of Truth
 
 ---
 
-## What Changed from v5.0
+## What Changed from v5.2
 
 | Change | Rationale |
 |---|---|
-| PP output: slide breakdown removed | Slides belong in Stage 1, not the course plan. PP is a map, not a spec. |
-| PP output: Flow Rationale → one sentence | One sentence is enough to justify volume order. Prose rationale added no review value. |
-| PP output: Review Notes → flags-only bullets | Prose review notes slowed review. Bullet flags are faster to scan and act on. |
-| PP Handoff Block now carries full course structure | P0 needs to know what volume it is in and what other parts exist. The Handoff Block is the only bridge between PP and P0. |
-| P0 input: SLIDES_FROM_OUTLINE removed | PP no longer outputs slides. P0 now plans slides itself in Section 0 before drafting. |
-| P0 input: VOLUME_PARTS field added | P0 consumes the current volume's part list so the LLM knows the full scope of the volume it is writing in. |
-| P0 prompt: Volume Context rule block added | Prevents P0 from repeating earlier parts or pre-teaching later ones. |
-| P0 prompt: Section 0 (Planned Slides) added | Slides are planned inside P0 before the breakdown begins — same output quality, correct stage placement. |
+| CP output: slide breakdown removed | Slides belong in Stage 1, not the course plan. CP is a map, not a spec. |
+| CP output: Flow Rationale → one sentence | One sentence is enough to justify volume order. Prose rationale added no review value. |
+| CP output: Review Notes → flags-only bullets | Prose review notes slowed review. Bullet flags are faster to scan and act on. |
+| CP Handoff Block now carries full course structure | MD needs to know what volume it is in and what other parts exist. The Handoff Block is the only bridge between CP and MD. |
+| MD input: SLIDES_FROM_OUTLINE removed | CP no longer outputs slides. MD now plans slides itself in Section 0 before drafting. |
+| MD input: VOLUME_PARTS field added | MD consumes the current volume's part list so the LLM knows the full scope of the volume it is writing in. |
+| MD prompt: Volume Context rule block added | Prevents MD from repeating earlier parts or pre-teaching later ones. |
+| MD prompt: Section 0 (Planned Slides) added | Slides are planned inside MD before the breakdown begins — same output quality, correct stage placement. |
 
 ### What did not change
-The Golden Rule, Cross-Format Consistency Gate, PP Input (5 fields), and format prompts PA / PB / PE are unchanged.
+The Golden Rule, Cross-Format Consistency Gate, CP Input (5 fields), and format prompts HO / SL / TP are unchanged.
 
 ---
 
@@ -25,17 +25,17 @@ The Golden Rule, Cross-Format Consistency Gate, PP Input (5 fields), and format 
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│  STAGE 0            STAGE 1          STAGE 2          STAGE 3               │
+│  STAGE 0            STAGE 1          STAGE 2                                │
 │                                                                              │
-│  Course          →  Master Draft  →  Format Outputs                         │
-│  Planner (PP)       (P0)             PA · PB · PE                           │
+│  CP  →  MD  →  Format Outputs                         │
 │                     ↑                                                        │
-│  Run once.          Consumes the      PA  → DOCX handout                    │
-│  Produces a         PP Handoff        PB  → MARP → PDF                      │
-│  Handoff Block.     Block directly.   PE  → Title pack                      │
+│  Run once.          Consumes the      HO  → DOCX handout               │
+│  Produces a         CP Handoff         SL   → MARP → PDF                │
+│  Handoff Block.     Block directly.   TP   → Title & description pack   │
 │  Review before                                                               │
-│  proceeding.        Run once per      SHORT-FORM PATH:                       │
-│                     part.             PP → PE-only (skip P0, PA, PB)         │
+│  proceeding.        Run once per      SHORT-FORM PATH:                      │
+│                     part.             CP → TP only                      │
+│                                       (skip MD, HO, SL)         │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -51,32 +51,32 @@ Run this check before starting any part:
 
 | Part type | Run | Skip |
 |---|---|---|
-| Full teaching unit — handout + slides | P0 → PA · PB · PE | — |
-| Full teaching unit — handout only | P0 → PA · PE | PB |
-| Full teaching unit — slides only | P0 → PB · PE | PA |
-| Short explainer / newsletter part | PE only (short-form path) | P0 · PA · PB |
-| Blog / Substack only | PE only (short-form path) | P0 · PA · PB |
+| Full teaching unit — handout + slides | MD → HO · SL · TP | — |
+| Full teaching unit — handout only | MD → HO · TP | SL |
+| Full teaching unit — slides only | MD → SL · TP | HO |
+| Short explainer / newsletter part | TP only (short-form path) | MD · HO · SL |
+| Blog / Substack only | TP only (short-form path) | MD · HO · SL |
 
-> **Always run PE** regardless of path. Consistent naming across channels
+> **Always run TP** regardless of path. Consistent naming across channels
 > protects discoverability.
 >
 > **Short-form path:** Use when the part is a standalone explainer or Substack
-> essay that does not require slides or a handout. Go directly from the PP
-> Handoff Block to PE. No P0 required.
+> essay that does not require slides or a handout. Go directly from the CP
+> Handoff Block to TP. No MD required.
 
 ---
 
-## Stage 0 — Course Planner (PP)
+## Stage 0 — CP (Course Planner)
 
 **Run once per course. Review and edit the output before proceeding to Stage 1.**
 
-The PP produces two things: a readable Course Structure for human review, and
-a Handoff Block at the end that feeds directly into P0. Do not skip the review
+CP produces two things: a readable Course Structure for human review, and
+a Handoff Block at the end that feeds directly into MD. Do not skip the review
 step — the Handoff Block carries every downstream assumption.
 
 ---
 
-### PP Input
+### CP Input
 
 ```
 ## COURSE PLANNER INPUT
@@ -102,7 +102,7 @@ THINGS_TO_AVOID:
 
 ---
 
-### PP Prompt
+### CP Prompt
 
 ```
 ## ROLE
@@ -150,7 +150,7 @@ Repeat for all volumes.
 ---
 
 ### HANDOFF BLOCK
-[Emit this block verbatim at the end. The human copies it into P0 input.]
+[Emit this block verbatim at the end. The human copies it into MD input.]
 
 SERIES_TITLE:      [Course title]
 TARGET_AUDIENCE:   [From Audience Profile → WHO]
@@ -172,7 +172,7 @@ COURSE_STRUCTURE:
 ## RULES
 - Volumes: 2–5. Hard limit.
 - Parts per volume: 3–8.
-- No slide breakdown in PP output — slides are planned in Stage 1.
+- No slide breakdown in CP output — slides are planned in Stage 1.
 - All part titles must be outcome-framed.
   BAD:  "Introduction to Prompts"
   GOOD: "Why Your Prompts Keep Failing"
@@ -180,7 +180,7 @@ COURSE_STRUCTURE:
 - Review Flags: bullet points only, no prose. Omit if nothing to flag.
 - If optional fields were blank, make a suggestion and include it as a
   Review Flag so the human can confirm or override.
-- Stop at the plan. Do not produce Master Drafts or any content.
+- Stop at the plan. Do not produce MDs or any content.
 
 ## SELF-CHECK (append verbatim)
 □ 2–5 volumes, each with 3–8 parts
@@ -194,32 +194,32 @@ COURSE_STRUCTURE:
 
 ---
 
-## Stage 1 — Master Draft (P0)
+## Stage 1 — MD (Master Draft)
 
-**One prompt per part. Do not run PA, PB, or PE without a completed,
-reviewed Master Draft.**
+**One prompt per part. Do not run HO, SL, or TP without a completed,
+reviewed MD.**
 
-The P0 input has two sections: the Handoff Block (copied once from PP,
+The MD input has two sections: the Handoff Block (copied once from CP,
 unchanged for every part in the series, except VOLUME_PARTS which is
 updated when moving to a new volume) and the Per-Part Fields (filled fresh
 for each part).
 
 ---
 
-### P0 Input
+### MD Input
 
 ```
-## MASTER DRAFT INPUT
+## MD INPUT
 
-# ── HANDOFF BLOCK — copy from PP output ──────────────────────────────
+# ── HANDOFF BLOCK — copy from CP output ──────────────────────────────────
 # VOLUME_PARTS: replace with the current volume's part list when you
 # move to a new volume. Everything else stays unchanged for the full series.
 
-SERIES_TITLE:      {{ From PP Handoff Block }}
-TARGET_AUDIENCE:   {{ From PP Handoff Block }}
-ASSUMED_KNOWLEDGE: {{ From PP Handoff Block }}
-CORE_PROBLEM:      {{ From PP Handoff Block }}
-TONE:              {{ From PP Handoff Block — override here if this part
+SERIES_TITLE:      {{ From CP Handoff Block }}
+TARGET_AUDIENCE:   {{ From CP Handoff Block }}
+ASSUMED_KNOWLEDGE: {{ From CP Handoff Block }}
+CORE_PROBLEM:      {{ From CP Handoff Block }}
+TONE:              {{ From CP Handoff Block — override here if this part
                       needs a different register }}
 
 VOLUME_PARTS:
@@ -253,7 +253,7 @@ THINGS_TO_AVOID:
 
 ---
 
-### P0 Prompt
+### MD Prompt
 
 ```
 ## ROLE
@@ -347,25 +347,25 @@ Must feel earned, not bolted on.
 
 ## Stage 2 — Format Prompts
 
-**Run any format independently after P0 is approved.**
+**Run any format independently after MD is approved.**
 
 ---
 
-### PA — DOCX Handout Generator
+### HO — DOCX Handout Generator
 
 **Output:** A structured Word document (.docx) used as a course handout,
 converted to PDF for distribution.
 
-**Two-part process:** PA produces a Document Spec first, then a rendering
+**Two-part process:** HO produces a Document Spec first, then a rendering
 script. This decouples content from rendering — swap renderers without
 rewriting the spec.
 
 ---
 
-#### PA Input
+#### HO Input
 
 ```
-## DOCX HANDOUT INPUT
+## HO INPUT
 
 MASTER_DRAFT:
   {{ PASTE COMPLETED MASTER DRAFT }}
@@ -379,7 +379,7 @@ BRAND_ACCENT_COLOR:
 
 ---
 
-#### PA Prompt
+#### HO Prompt
 
 ```
 ## ROLE
@@ -508,17 +508,17 @@ CTA PAGE:
 
 ---
 
-### PB — MARP Slides Generator
+### SL — MARP Slides Generator
 
 **Output:** A `.md` MARP file exported to PDF for sharing.
 No speaker notes. Clean static slides optimised for readability as a PDF.
 
 ---
 
-#### PB Input
+#### SL Input
 
 ```
-## MARP SLIDES INPUT
+## SL INPUT
 
 MASTER_DRAFT:
   {{ PASTE COMPLETED MASTER DRAFT }}
@@ -533,7 +533,7 @@ SLIDE_RATIO:
 
 ---
 
-#### PB Prompt
+#### SL Prompt
 
 ```
 ## ROLE
@@ -624,10 +624,10 @@ SLIDE N+4 — CTA SLIDE
 
 ---
 
-### PE — Title & Description Pack
+### TP — Title & Description Pack
 
-**Run this after the Master Draft is fully approved, or directly from the
-PP Handoff Block when using the short-form path.**
+**Run this after the MD is fully approved, or directly from the
+CP Handoff Block when using the short-form path.**
 
 ```
 ## ROLE
@@ -635,7 +635,7 @@ You are a content strategist and SEO copywriter producing platform-
 optimised titles, descriptions, and copy for every distribution channel.
 
 ## INPUT
-{{ PASTE COMPLETED MASTER DRAFT — or PP Handoff Block if short-form path }}
+{{ PASTE COMPLETED MD — or CP Handoff Block if short-form path }}
 
 ## OUTPUT FORMAT
 Output all five blocks below, clearly labelled.
@@ -666,14 +666,14 @@ Benefit-led. Must match the Part title from the planner.]
 --- POSITIONING FLAG ---
 [yes / no]
 [If yes: note in one sentence what the title-writing process revealed
-about positioning that differs from the PP framing. Bring this back
-to the Course Planner before the next course iteration.]
+about positioning that differs from the CP framing. Bring this back
+to CP before the next course iteration.]
 
 ## RULES
 - YouTube title: no ALL CAPS, no emoji, lead with keyword.
 - Instagram: first 125 characters must work as a standalone sentence.
 - Never duplicate the same sentence verbatim across platforms.
-- Match TONE from the Master Draft (or PP Handoff Block if short-form).
+- Match TONE from MD (or CP Handoff Block if short-form).
 
 ## SELF-CHECK (append verbatim)
 □ YouTube title ≤ 60 characters, includes part reference
@@ -692,24 +692,24 @@ to the Course Planner before the next course iteration.]
 
 | Problem | Where to fix |
 |---|---|
-| Output is too generic | Enrich P0 — add concrete examples to Sections 4 and 5. Never fix generic outputs in the format prompt. |
-| Wrong tone | Add 2–3 phrasing examples to the P0 TONE field: "Write like this: [example]. Not like this: [bad example]." |
-| Tone is right for some parts but not others | Override TONE in the Per-Part Fields of P0. The Handoff Block default still applies to all other parts. |
-| DOCX structure is off | Re-run PA with a correction block: "REMINDER: [violated rule]. Fix this section: [paste bad output]." |
-| MARP bullets too long | Append to PB: "REMINDER: max 12 words per bullet. Rewrite all bullets exceeding this limit." |
-| Inconsistency across DOCX and slides | Lock P0 first. Inconsistency almost always means P0 was not finalised before format runs began. |
-| Volume scope is too broad | Edit the PP output directly before running any P0. Split into two volumes and flag in Review Flags. |
-| Part count per volume is too high | Merge two parts or move one to the next volume. Edit PP — never patch in P0. |
-| Planner suggested wrong parts | Edit the PP output before running any Master Draft. Never patch downstream. |
-| PE surfaces a better positioning angle | Note it in the Positioning Flag. Bring it back to PP for the next course — do not patch the current course mid-run. |
-| P0 repeated content from another part in the volume | Check VOLUME_PARTS is correct and PART_NUMBER is accurate. Re-run P0 with a correction block if needed. |
-| P0 pre-taught a later part's content | Append to P0: "REMINDER: do not reveal content from parts after [PART_NUMBER]. Rewrite [section] without it." |
+| Output is too generic | Enrich MD — add concrete examples to Sections 4 and 5. Never fix generic outputs in the format prompt. |
+| Wrong tone | Add 2–3 phrasing examples to the MD TONE field: "Write like this: [example]. Not like this: [bad example]." |
+| Tone is right for some parts but not others | Override TONE in the Per-Part Fields of MD. The CP Handoff Block default still applies to all other parts. |
+| DOCX structure is off | Re-run HO with a correction block: "REMINDER: [violated rule]. Fix this section: [paste bad output]." |
+| MARP bullets too long | Append to SL: "REMINDER: max 12 words per bullet. Rewrite all bullets exceeding this limit." |
+| Inconsistency across DOCX and slides | Lock MD first. Inconsistency almost always means MD was not finalised before format runs began. |
+| Volume scope is too broad | Edit the CP output directly before running any MD. Split into two volumes and flag in Review Flags. |
+| Part count per volume is too high | Merge two parts or move one to the next volume. Edit CP — never patch in MD. |
+| CP suggested wrong parts | Edit the CP output before running any MD. Never patch downstream. |
+| TP surfaces a better positioning angle | Note it in the Positioning Flag. Bring it back to CP for the next course — do not patch the current course mid-run. |
+| MD repeated content from another part in the volume | Check VOLUME_PARTS is correct and PART_NUMBER is accurate. Re-run MD with a correction block if needed. |
+| MD pre-taught a later part's content | Append to MD: "REMINDER: do not reveal content from parts after [PART_NUMBER]. Rewrite [section] without it." |
 | Planned Slides in Section 0 are off-target | Revise PRIMARY_TAKEAWAY or PART_TITLE — the slide plan derives from these. Fix upstream, not in the breakdown. |
 
 > **Golden Rule:** Fix problems upstream, not downstream. If both formats share
-> the same issue, the fix belongs in the Master Draft — not in PA and PB
+> the same issue, the fix belongs in MD — not in HO and SL
 > separately. If multiple parts share the same issue, the fix belongs in the
-> PP output — not in individual P0 runs.
+> CP output — not in individual MD runs.
 
 ---
 
@@ -721,10 +721,10 @@ Before distributing any format, confirm all three:
 2. **CTA** — identical in intent on the DOCX CTA page and MARP final slide
 3. **Anchor Analogy** — same name and framing in both formats
 
-If any of these diverge, return to the Master Draft before publishing.
+If any of these diverge, return to MD before publishing.
 
 ---
 
-*Content Generation Ecosystem · v5.1 · Updated May 2026*
-*Active formats: DOCX Handout (PA) · MARP Slides (PB) · Title Pack (PE)*
+*Content Generation Ecosystem · v5.3 · Updated May 2026*
+*Active formats: HO (DOCX) · SL (MARP) · TP (Title Pack)*
 *HTML Tutorial and Carousel prompts deferred — restore in v6.0 when ready*
